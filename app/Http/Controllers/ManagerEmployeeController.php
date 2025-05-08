@@ -5,10 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Asset;
+use Faker\Provider\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Services\ImageService;
 class ManagerEmployeeController extends Controller
 {
+    protected $imageService;
+    public function __construct(ImageService $imageService)
+    {
+        $this->imageService = $imageService;
+    }
+  
     public function index()
     {
         $employees = User::with(['role', 'assets'])->get()->map(function ($employee) {
@@ -49,12 +57,7 @@ class ManagerEmployeeController extends Controller
         // ]);
 
 
-        if ($request->hasFile('img')) {
-            $imageName = time() . '.' . $request->img->getClientOriginalExtension();
-            $request->img->move(public_path('upload/images'), $imageName);
-        } else {
-            $imageName = null;
-        }
+        $imageName = $this->imageService->handleImageUpload($request);
 
         $user = User::create([
             'name' => $request->name,
@@ -88,12 +91,7 @@ class ManagerEmployeeController extends Controller
         $employee->email = $request->email;
         $employee->role_id = $request->role_id;
     
-        if ($request->hasFile('img')) {
-            $file = $request->file('img');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('upload/images'), $filename);
-            $employee->img = $filename;
-        }
+        $employee->img = $this->imageService->handleImageUpload($request) ?? $employee->img;
         
         if ($request->has('equipment_manager')) {
             $employee->assets()->sync($request->equipment_manager);

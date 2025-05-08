@@ -2,43 +2,43 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Asset;
-
+use App\Services\ImageService;
+use App\Http\Requests\AssetRequest;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 class ManagerAssetController extends Controller
 {
+    protected $imageService;
+    public function __construct(ImageService $imageService)
+    {
+        $this->imageService = $imageService;
+    }
+
     public function index()
     {
         $data = Asset::all();
         return view('manager_asset', ['data' => $data]);
     }
-    public function create(Request $request)
+    public function create(AssetRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'status' => 'required|string|max:255',
-        ]);
-
-        Asset::create($request->all());
-
+        Asset::create($request->validated());
         return redirect()->back()->with('success_create_manager_asset', 'Tạo tài sản thành công!');
     }
-    public function edit(Request $request)
+    public function edit(AssetRequest $request)
     {
         $asset = Asset::findOrFail($request->id);
-        $asset->name = $request->input('name');
-        $asset->type = $request->input('type');
-        $asset->status = $request->input('status');
-        $asset->save();
-
+        $asset->update($request->validated());
         return redirect()->back()->with('success_edit_manager_asset', 'Cập nhật tài sản thành công!');
     }
+    
+
     public function delete(Request $request)
     {
         $asset = Asset::findOrFail($request->id);
-        $asset->users()->detach(); 
+        $asset->users()->detach();
         $asset->delete();
         return response()->json(['success' => true]);
     }
+    
 }
