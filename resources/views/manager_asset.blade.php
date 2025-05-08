@@ -17,23 +17,24 @@
         <div class="container mx-auto px-4">
             <h1 class="text-2xl font-bold mb-4">Quản lý thiết bị</h1>
 
-            @if(session('success'))
+            @if(session('success_create_manager_asset'))
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
                 <strong class="font-bold">Thành công!</strong>
                 <span class="block sm:inline">{{ session('success') }}</span>
                 <span onclick="this.parentElement.remove();" class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer">&times;</span>
             </div>
             @endif
-
+            @if(in_array('create_asset', $check_permissions))
             <button onclick="toggleAddEquimentForm()" class="bg-blue-600 text-white px-4 py-2 rounded mb-4 inline-block">
                 + Thêm thiết bị mới
             </button>
+            @endif
 
             <!-- Form thêm thiết bị mới -->
             <div id="addDeviceForm" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
                 <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
                     <h2 class="text-xl font-semibold mb-4">Thêm thiết bị mới</h2>
-                    <form action="" method="POST">
+                    <form action="{{route('assets.create')}}" method="POST">
                         @csrf
                         <div class="mb-4">
                             <label for="name" class="block mb-1 font-medium">Tên thiết bị</label>
@@ -47,8 +48,8 @@
                             <label for="status" class="block mb-1 font-medium">Trạng thái</label>
                             <select name="status" id="status" required class="w-full border border-gray-300 rounded px-3 py-2">
                                 <option value="available">available</option>
-                                <option value="is_use">is_use</option>
-                                <option value="break">break</option>
+                                <option value="in_use">in_use</option>
+                                <option value="broken">broken</option>
                             </select>
                         </div>
                         <div class="flex justify-end space-x-2">
@@ -76,13 +77,19 @@
                         <td class="px-4 py-2">{{ $asset->type }}</td>
                         <td class="px-4 py-2">{{ $asset->status }}</td>
                         <td class="px-4 py-2">
-                            <a href="{ route('manager.assets.edit', $asset->id) }}" class="text-indigo-600 hover:underline">Sửa</a>
-                            <form action="{ route('manager.assets.destroy', $asset->id) }}" method="POST" class="inline-block ml-2" onsubmit="return confirm('Xóa thiết bị này?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:underline">Xoá</button>
-                            </form>
+                            @if(in_array('edit_asset', $check_permissions))
+                            <button onclick="showEditForm({{ $asset->id }}, '{{ $asset->name }}', '{{ $asset->type }}', '{{ $asset->status }}')" class="text-indigo-600 hover:underline">
+                                Sửa
+                            </button>
+                            @endif
+                            @if(in_array('delete_asset', $check_permissions))
+                            <button onclick='openDeleteRoleModal({{ $asset->id }})'
+                                class="text-red-600 ml-2 hover:underline focus:outline-none">
+                                Xóa
+                            </button>
+                            @endif
                         </td>
+
                     </tr>
                     @empty
                     <tr>
@@ -94,13 +101,49 @@
         </div>
     </div>
 
+    <!-- Modal sửa thiết bị -->
+    <div id="editDeviceForm" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded shadow-md w-full max-w-md relative">
+            <h2 class="text-xl font-semibold mb-4">Sửa thiết bị</h2>
+            <form id="editForm" method="POST">
+                @csrf
+                @method('PUT')
+
+                <div class="mb-4">
+                    <label for="edit_name" class="block mb-1 font-medium">Tên thiết bị</label>
+                    <input type="text" name="name" id="edit_name" required class="w-full border border-gray-300 rounded px-3 py-2">
+                </div>
+                <div class="mb-4">
+                    <label for="edit_type" class="block mb-1 font-medium">Loại thiết bị</label>
+                    <input type="text" name="type" id="edit_type" required class="w-full border border-gray-300 rounded px-3 py-2">
+                </div>
+
+                <div class="mb-4">
+                    <label for="edit_status" class="block mb-1 font-medium">Trạng thái</label>
+                    <select name="status" id="edit_status" required class="w-full border border-gray-300 rounded px-3 py-2">
+                        <option value="available">available</option>
+                        <option value="in_use">in_use</option>
+                        <option value="broken">broken</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="toggleEditForm()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded">Huỷ</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <script>
         function toggleAddEquimentForm() {
             const form = document.getElementById('addDeviceForm');
             form.classList.toggle('hidden');
         }
 
-        // Tự động ẩn alert sau vài giây
         window.onload = () => {
             const alertBox = document.querySelector('[role="alert"]');
             if (alertBox) {
@@ -108,6 +151,50 @@
             }
         };
     </script>
+    <!-- script modal edit -->
+    <script>
+        function toggleEditForm() {
+            const form = document.getElementById('editDeviceForm');
+            form.classList.toggle('hidden');
+        }
+
+        function showEditForm(id, name, type, status) {
+            // Mở form
+            toggleEditForm();
+
+            // Set form action
+            const form = document.getElementById('editForm');
+            form.action = `/${id}`;
+            form.action = "{{ route('assets.edit') }}?id=" + id;
+
+
+            // Đổ dữ liệu vào input
+            document.getElementById('edit_name').value = name;
+            document.getElementById('edit_type').value = type;
+            document.getElementById('edit_status').value = status;
+        }
+
+        function openDeleteRoleModal(roleId) {
+            if (confirm('Bạn có chắc chắn muốn xóa không?')) {
+                $.ajax({
+                    url: "{{ route('assets.delete') }}",
+                    type: "DELETE",
+                    data: {
+                        id: roleId,
+                        _token: "{{ csrf_token() }}"
+                    },
+                    success: function(response) {
+                        alert('Xóa vai trò thành công!');
+                        location.reload();
+                    },
+                    error: function(xhr) {
+                        alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                    }
+                });
+            }
+        }
+    </script>
+
 </body>
 
 </html>

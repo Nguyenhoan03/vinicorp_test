@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\Asset;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Log;
 class ManagerEmployeeController extends Controller
 {
     public function index()
@@ -18,6 +18,8 @@ class ManagerEmployeeController extends Controller
                 'email' => $employee->email,
                 'img' => $employee->img,
                 'role' => $employee->role->name ?? 'Không có',
+                'role_id' => $employee->role_id ?? null,
+                'asset_id' => optional($employee->assets->first())->id,
                 'assets' => $employee->assets->pluck('name')->join(', ') ?: 'Không có thiết bị',
                 'status' => $employee->assets->map(function ($asset) {
                     return [
@@ -27,11 +29,12 @@ class ManagerEmployeeController extends Controller
                 })->toArray(),
             ];
         });
+    
         $roles = Role::all();
         $equipment = Asset::select('name','id')->get();
         return view('manager_employee', ['data' => $employees, 'roles' => $roles, 'equipment' => $equipment]);
     }
-
+    
 
 
 
@@ -71,14 +74,45 @@ class ManagerEmployeeController extends Controller
 
 
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
-        return view('manager_employee.edit', ['id' => $id]);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'role_id' => 'required|exists:roles,id',
+            'img' => 'nullable|image|max:2048',
+        ]);
+    
+        $employee = User::findOrFail($id);
+        $employee->name = $request->name;
+        $employee->email = $request->email;
+        $employee->role_id = $request->role_id;
+    
+        if ($request->hasFile('img')) {
+            $file = $request->file('img');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('upload/images'), $filename);
+            $employee->img = $filename;
+        }
+        
+        if ($request->has('equipment_manager')) {
+            $employee->assets()->sync($request->equipment_manager);
+        } else {
+            $employee->assets()->detach();
+        }
+    
+        $employee->save();
+    
+        return redirect()->route('employees.index')->with('success', 'Nhân viên đã được cập nhật.');
     }
+    
 
-    public function destroy($id)
+    public function delete(Request $request)
     {
-        return redirect()->route('employees.index')->with('success', 'Employee deleted successfully');
+        $user = User::findOrFail($request->id);
+        $user->assets()->detach(); 
+        $user->delete();
+        return response()->json(['success' => true]);
     }
 
     public function updateRole(Request $request, $id)

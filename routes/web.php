@@ -17,17 +17,25 @@ Route::group(['middleware' => VerifyAccountLogin::class], function () {
         return view('dashboard');
     })->name('dashboard');
 
+    Route::put('/manager_employee/{id}/role', [ManagerEmployeeController::class, 'updateRole'])->name('employees.updateRole');
     Route::get('/manager_employee', [ManagerEmployeeController::class, 'index'])->name('employees.index');
     Route::post('/create_manager_employee', [ManagerEmployeeController::class, 'create'])->name('employees.create');
+    Route::put('/employees/{id}', [ManagerEmployeeController::class, 'edit'])->name('employees.edit');
+    Route::delete('/delete_manager_employee', [ManagerEmployeeController::class, 'delete'])->name('employees.delete');
 
 
 
     Route::get('/manager_asset', [ManagerAssetController::class,'index'])->name('assets.index');
+    Route::post('/create_manager_asset', [ManagerAssetController::class,'create'])->name('assets.create');
+    Route::put('/edit_manager_asset', [ManagerAssetController::class,'edit'])->name('assets.edit');
+    Route::delete('/delete_manager_asset', [ManagerAssetController::class,'delete'])->name('assets.delete');
+
+
+
     Route::get('/manager_decentralization', [ManagerDecentralizationController::class,'index'])->name('decentralization.index');
     Route::post('/create_manager_decentralization', [ManagerDecentralizationController::class,'create'])->name('decentralization.create');
     Route::put('/edit_manager_decentralization', [ManagerDecentralizationController::class,'edit'])->name('decentralization.edit');
     Route::delete('/delete_manager_decentralization', [ManagerDecentralizationController::class,'delete'])->name('decentralization.delete');
     
-    Route::put('/employees/{id}/role', [ManagerEmployeeController::class, 'updateRole'])->name('employees.updateRole');
 
 });
