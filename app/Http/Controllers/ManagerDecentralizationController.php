@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Permission;
 use App\Models\Role;
-use GuzzleHttp\Psr7\Response;
 use Illuminate\Http\Request;
 use App\Http\Requests\RoleRequest;
+use App\Traits\ModelFinder;
 
 class ManagerDecentralizationController extends Controller
 {
+    use ModelFinder;
     public function index()
     {
         $data = Role::with('permissions')->get();
@@ -28,7 +29,7 @@ class ManagerDecentralizationController extends Controller
 
     public function edit(RoleRequest $request)
     {
-        $role = Role::findOrFail($request->id);
+        $role = $this->findModelOrFail(Role::class, $request->id);
         $role->update(['name' => $request->role_name]);
         $role->permissions()->sync($request->permissions);
 
@@ -38,7 +39,7 @@ class ManagerDecentralizationController extends Controller
 
     public function delete(Request $request)
     {
-        $role = Role::findOrFail($request->id);
+        $role = $this->findModelOrFail(Role::class, $request->id);
         $role->permissions()->detach();
         $role->delete();
 

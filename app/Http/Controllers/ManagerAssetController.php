@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Asset;
 use App\Services\ImageService;
 use App\Http\Requests\AssetRequest;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use App\Traits\ModelFinder;
 class ManagerAssetController extends Controller
 {
+    use ModelFinder;
     protected $imageService;
     public function __construct(ImageService $imageService)
     {
@@ -35,7 +36,7 @@ class ManagerAssetController extends Controller
 
     public function delete(Request $request)
     {
-        $asset = Asset::findOrFail($request->id);
+        $asset = $this->findModelOrFail(Asset::class,$request->id);
         $asset->users()->detach();
         $asset->delete();
         return response()->json(['success' => true]);

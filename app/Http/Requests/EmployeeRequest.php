@@ -23,8 +23,8 @@ class EmployeeRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:2|confirmed',
+            'email' => 'required|email',
+            'password' => 'required|string|min:2',
             'role' => 'required|exists:roles,id',
             'img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];

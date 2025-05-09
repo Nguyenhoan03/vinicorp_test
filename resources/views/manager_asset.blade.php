@@ -12,18 +12,27 @@
     @include('components.Header_admin')
 
     <div class="flex">
+
         @include('components.Sidebar_admin')
 
         <div class="container mx-auto px-4">
-            <h1 class="text-2xl font-bold mb-4">Quản lý thiết bị</h1>
 
-            @if(session('success_create_manager_asset'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Thành công!</strong>
-                <span class="block sm:inline">{{ session('success') }}</span>
-                <span onclick="this.parentElement.remove();" class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer">&times;</span>
-            </div>
-            @endif
+        @if(session('success_create_manager_asset'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong class="font-bold">Thành công!</strong>
+            <span class="block sm:inline">{{ session('success_create_manager_asset') }}</span>
+            <span onclick="this.parentElement.remove();" class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer">&times;</span>
+        </div>
+        @endif
+
+        @if(session('success_edit_manager_asset'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong class="font-bold">Thành công!</strong>
+            <span class="block sm:inline">{{ session('success_edit_manager_asset') }}</span>
+            <span onclick="this.parentElement.remove();" class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer">&times;</span>
+        </div>
+        @endif
+            <h1 class="text-2xl font-bold mb-4">Quản lý thiết bị</h1>
             @if(in_array('create_asset', $check_permissions))
             <button onclick="toggleAddEquimentForm()" class="bg-blue-600 text-white px-4 py-2 rounded mb-4 inline-block">
                 + Thêm thiết bị mới

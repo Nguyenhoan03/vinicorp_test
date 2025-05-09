@@ -15,6 +15,14 @@
         @include('components.Sidebar_admin')
 
         <div class="p-6 flex-1">
+
+            @if(session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <strong class="font-bold">Thành công!</strong>
+                <span class="block sm:inline">{{ session('success') }}</span>
+                <span onclick="this.parentElement.remove();" class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer">&times;</span>
+            </div>
+            @endif
             <h2 class="text-2xl font-bold mb-4">Danh sách nhân viên</h2>
 
             @if(in_array('create_user', $check_permissions))
@@ -22,6 +30,21 @@
                 + Thêm nhân viên
             </button>
             @endif
+
+            <div class="mb-4 flex items-center gap-4">
+                <form method="GET" action="{{ route('employees.index') }}" class="flex items-center gap-2">
+                    <label for="equipment_filter" class="text-sm font-medium">Lọc theo thiết bị:</label>
+                    <select name="equipment_filter" id="equipment_filter" class="border px-3 py-2 rounded">
+                        <option value="">Tất cả</option>
+                        @foreach ($equipment as $eq)
+                        <option value="{{ $eq->id }}" {{ request('equipment_filter') == $eq->id ? 'selected' : '' }}>
+                            {{ $eq->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Lọc</button>
+                </form>
+            </div>
 
             <!-- FORM THÊM NHÂN VIÊN -->
             <div id="addEmployeeForm" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">

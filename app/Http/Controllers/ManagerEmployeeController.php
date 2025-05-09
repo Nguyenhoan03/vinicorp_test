@@ -5,21 +5,29 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Asset;
-use Faker\Provider\Image;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use App\Http\Requests\EmployeeRequest;
 use App\Services\ImageService;
+use App\Traits\ModelFinder;
 class ManagerEmployeeController extends Controller
 {
+    use ModelFinder;
     protected $imageService;
     public function __construct(ImageService $imageService)
     {
         $this->imageService = $imageService;
     }
   
-    public function index()
+    public function index(Request $request)
     {
-        $employees = User::with(['role', 'assets'])->get()->map(function ($employee) {
+        $filterEquipment = $request->input('equipment_filter');
+        $employees = User::with(['role', 'assets'])
+        ->when($filterEquipment, function ($query, $filterEquipment) {
+            return $query->whereHas('assets', function ($q) use ($filterEquipment) {
+                $q->where('assets.id', $filterEquipment);
+            });
+        })
+        ->get()->map(function ($employee) {
             return [
                 'id' => $employee->id,
                 'name' => $employee->name,
@@ -37,77 +45,49 @@ class ManagerEmployeeController extends Controller
                 })->toArray(),
             ];
         });
-    
-        $roles = Role::all();
+        $roles = Role::select('id','name')->get();
         $equipment = Asset::select('name','id')->get();
-        return view('manager_employee', ['data' => $employees, 'roles' => $roles, 'equipment' => $equipment]);
-    }
-    
+        return view('manager_employee', [
+            'data' => $employees,
+            'roles' => $roles,
+            'equipment' => $equipment,
+        ]);
+        }
 
-
-
-    public function create(Request $request)
+    public function create(EmployeeRequest $request)
     {
-        // $request->validate([
-        //     'name' => 'required|string|max:255',
-        //     'email' => 'required|email|unique:users,email',
-        //     'password' => 'required|string|min:2|confirmed',
-        //     'role' => 'required|exists:roles,id',
-        //     'img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        // ]);
-
-
         $imageName = $this->imageService->handleImageUpload($request);
-
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
             'role_id' => $request->role,
             'img' => $imageName,
-            
         ]);
-
-        if($user){
+    
+        if ($user) {
             $user->assets()->attach($request->equipment_manager);
         }
-
+    
         return redirect()->route('employees.index')->with('success', 'Thêm nhân viên thành công!');
     }
-
-
-
     public function edit(Request $request, $id)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email',
-            'role_id' => 'required|exists:roles,id',
-            'img' => 'nullable|image|max:2048',
-        ]);
-    
-        $employee = User::findOrFail($id);
-        $employee->name = $request->name;
-        $employee->email = $request->email;
-        $employee->role_id = $request->role_id;
-    
-        $employee->img = $this->imageService->handleImageUpload($request) ?? $employee->img;
-        
+        $employee = $this->findModelOrFail(User::class, $id);
+        $employee->fill($request->only(['name', 'email', 'role_id']));
+        $employee->img = $this->imageService->handleImageUpload($request) ?? $employee->img;   
         if ($request->has('equipment_manager')) {
             $employee->assets()->sync($request->equipment_manager);
         } else {
             $employee->assets()->detach();
         }
-    
         $employee->save();
-    
         return redirect()->route('employees.index')->with('success', 'Nhân viên đã được cập nhật.');
     }
-    
 
     public function delete(Request $request)
     {
-        $user = User::findOrFail($request->id);
+        $user = $this->findModelOrFail(User::class, $request->id);
         $user->assets()->detach(); 
         $user->delete();
         return response()->json(['success' => true]);
@@ -118,11 +98,9 @@ class ManagerEmployeeController extends Controller
         $request->validate([
             'role_id' => 'required|exists:roles,id',
         ]);
-
-        $user = User::findOrFail($id);
+        $user = $this->findModelOrFail(User::class, $id);
         $user->role_id = $request->input('role_id');
         $user->save();
-
         return redirect()->route('employees.index')->with('success', 'Role updated successfully');
     }
 }
