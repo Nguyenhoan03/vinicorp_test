@@ -7,6 +7,11 @@
         <title>Trang quản lý</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+        <script src="{{ asset('js/delete.js') }}"></script>
+
     </head>
 
     <body class="bg-gray-100 font-sans text-gray-900">
@@ -15,19 +20,13 @@
         <div class="flex">
 
 
-            
+
             @include('components.Sidebar_admin')
 
             <!-- Vai trò và phân quyền -->
             <div class="container mx-auto px-4 py-6">
-            @if(session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Thành công!</strong>
-                <span class="block sm:inline">{{ session('success') }}</span>
-                <span onclick="this.parentElement.remove();" class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer">&times;</span>
-            </div>
-            @endif
 
+                @include('components.alert', ['type' => 'success'])
                 <h2 class="text-2xl font-bold text-center mb-6">Quản lý Vai Trò và Quyền</h2>
 
                 <!-- Danh sách vai trò -->
@@ -61,14 +60,15 @@
                                         @endforeach
                                     </td>
                                     <td class="py-2 px-4 border-b">
-                                    @if(in_array('edit_decentralization', $check_permissions))    
-                                    <button onclick='openEditRoleModal({{ $role->id }}, "{{ $role->name }}", @json($role->permissions->pluck("id")))'
+                                        @if(in_array('edit_decentralization', $check_permissions))
+                                        <button onclick='openEditRoleModal({{ $role->id }}, "{{ $role->name }}", @json($role->permissions->pluck("id")))'
                                             class="text-indigo-600 hover:underline focus:outline-none">
                                             Sửa
                                         </button>
                                         @endif
                                         @if(in_array('delete_decentralization', $check_permissions))
-                                        <button onclick='openDeleteRoleModal({{ $role->id }})'
+                                        <button
+                                            onclick="openDeleteModal({{ $role->id }}, '{{ route('decentralization.delete') }}', 'thiết bị')"
                                             class="text-red-600 ml-2 hover:underline focus:outline-none">
                                             Xóa
                                         </button>
@@ -152,8 +152,6 @@
         </div>
 
         <!-- Scripts -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
         <script>
             function openRoleModal() {
@@ -186,27 +184,8 @@
                 document.getElementById('editRoleModal').classList.remove('flex');
                 document.getElementById('editRoleModal').classList.add('hidden');
             }
-
-            function openDeleteRoleModal(roleId) {
-                if (confirm('Bạn có chắc chắn muốn xóa vai trò này?')) {
-                    $.ajax({
-                        url: "{{ route('decentralization.delete') }}",
-                        type: "DELETE",
-                        data: {
-                            id: roleId,
-                            _token: "{{ csrf_token() }}"
-                        },
-                        success: function(response) {
-                            alert('Xóa vai trò thành công!');
-                            location.reload();
-                        },
-                        error: function(xhr) {
-                            alert('Có lỗi xảy ra. Vui lòng thử lại.');
-                        }
-                    });
-                }
-            }
         </script>
+
     </body>
 
     </html>

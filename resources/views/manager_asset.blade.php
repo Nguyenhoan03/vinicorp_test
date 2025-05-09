@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ thống quản lý nhân viên</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+
 </head>
 
 <body class="bg-gray-100 text-gray-900">
@@ -17,21 +21,9 @@
 
         <div class="container mx-auto px-4">
 
-        @if(session('success_create_manager_asset'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <strong class="font-bold">Thành công!</strong>
-            <span class="block sm:inline">{{ session('success_create_manager_asset') }}</span>
-            <span onclick="this.parentElement.remove();" class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer">&times;</span>
-        </div>
-        @endif
 
-        @if(session('success_edit_manager_asset'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <strong class="font-bold">Thành công!</strong>
-            <span class="block sm:inline">{{ session('success_edit_manager_asset') }}</span>
-            <span onclick="this.parentElement.remove();" class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer">&times;</span>
-        </div>
-        @endif
+            @include('components.alert', ['type' => 'success_create_manager_asset', 'title' => 'Thành công!'])
+            @include('components.alert', ['type' => 'success_edit_manager_asset', 'title' => 'Thành công!'])
             <h1 class="text-2xl font-bold mb-4">Quản lý thiết bị</h1>
             @if(in_array('create_asset', $check_permissions))
             <button onclick="toggleAddEquimentForm()" class="bg-blue-600 text-white px-4 py-2 rounded mb-4 inline-block">
@@ -92,13 +84,13 @@
                             </button>
                             @endif
                             @if(in_array('delete_asset', $check_permissions))
-                            <button onclick='openDeleteRoleModal({{ $asset->id }})'
+                            <button
+                                onclick="openDeleteModal({{ $asset->id }}, '{{ route('assets.delete') }}', 'thiết bị')"
                                 class="text-red-600 ml-2 hover:underline focus:outline-none">
                                 Xóa
                             </button>
                             @endif
                         </td>
-
                     </tr>
                     @empty
                     <tr>
@@ -145,7 +137,6 @@
     </div>
 
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
         function toggleAddEquimentForm() {
@@ -182,27 +173,8 @@
             document.getElementById('edit_type').value = type;
             document.getElementById('edit_status').value = status;
         }
-
-        function openDeleteRoleModal(roleId) {
-            if (confirm('Bạn có chắc chắn muốn xóa không?')) {
-                $.ajax({
-                    url: "{{ route('assets.delete') }}",
-                    type: "DELETE",
-                    data: {
-                        id: roleId,
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(response) {
-                        alert('Xóa vai trò thành công!');
-                        location.reload();
-                    },
-                    error: function(xhr) {
-                        alert('Có lỗi xảy ra. Vui lòng thử lại.');
-                    }
-                });
-            }
-        }
     </script>
+    <script src="{{ asset('js/delete.js') }}"></script>
 
 </body>
 

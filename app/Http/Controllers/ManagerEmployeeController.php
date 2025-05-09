@@ -35,7 +35,7 @@ class ManagerEmployeeController extends Controller
                 'img' => $employee->img,
                 'role' => $employee->role->name ?? 'Không có',
                 'role_id' => $employee->role_id ?? null,
-                'asset_id' => optional($employee->assets->first())->id,
+                'asset_ids' => $employee->assets->pluck('id')->toArray(),
                 'assets' => $employee->assets->pluck('name')->join(', ') ?: 'Không có thiết bị',
                 'status' => $employee->assets->map(function ($asset) {
                     return [

@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ thống quản lý nhân viên</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+
 </head>
 
 <body class="bg-gray-100 text-gray-900">
@@ -16,13 +20,7 @@
 
         <div class="p-6 flex-1">
 
-            @if(session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Thành công!</strong>
-                <span class="block sm:inline">{{ session('success') }}</span>
-                <span onclick="this.parentElement.remove();" class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer">&times;</span>
-            </div>
-            @endif
+            @include('components.alert', ['type' => 'success'])
             <h2 class="text-2xl font-bold mb-4">Danh sách nhân viên</h2>
 
             @if(in_array('create_user', $check_permissions))
@@ -65,13 +63,23 @@
                                 <label for="password" class="block text-sm font-medium">Mật khẩu</label>
                                 <input type="password" name="password" id="password" required class="w-full border px-3 py-2 rounded">
                             </div>
-                            <div>
-                                <label for="equipment_manager" class="block text-sm font-medium">Thiết bị quản lý</label>
-                                <select name="equipment_manager" id="equipment_manager" class="w-full border px-3 py-2 rounded">
-                                    @foreach ($equipment as $eq)
-                                    <option value="{{ $eq->id }}">{{ $eq->id }} - {{ ucfirst($eq->name) }}</option>
+                            <div class="md:col-span-2">
+                                <label for="edit_asset_id" class="block text-sm font-medium text-gray-700">Thiết bị quản lý</label>
+                                <div id="edit_asset_id" class="grid grid-cols-2 gap-2">
+                                    @foreach ($equipment as $asset)
+                                    <div class="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            name="equipment_manager[]"
+                                            value="{{ $asset->id }}"
+                                            id="asset_{{ $asset->id }}"
+                                            class="mr-2">
+                                        <label for="asset_{{ $asset->id }}" class="text-sm text-gray-700">
+                                            {{ $asset->id }} - {{ $asset->name }}
+                                        </label>
+                                    </div>
                                     @endforeach
-                                </select>
+                                </div>
                             </div>
                             <div>
                                 <label for="role" class="block text-sm font-medium">Vai trò</label>
@@ -96,45 +104,54 @@
 
             <!-- FORM SỬA NHÂN VIÊN -->
             <div id="editEmployeeForm" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div class="bg-white p-6 rounded-lg w-full max-w-md shadow-xl">
-                    <h3 class="text-lg font-semibold mb-4">Sửa thông tin nhân viên</h3>
-                    <form method="POST" action="" id="editForm" enctype="multipart/form-data" class="space-y-4">
+                <div class="bg-white p-8 rounded-lg w-full max-w-lg shadow-xl">
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800">Sửa thông tin nhân viên</h3>
+                    <form method="POST" action="" id="editForm" enctype="multipart/form-data" class="space-y-6">
                         @csrf
                         @method('PUT')
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label for="edit_name" class="block text-sm font-medium">Tên</label>
-                                <input type="text" name="name" id="edit_name" required class="w-full border px-3 py-2 rounded">
+                                <label for="edit_name" class="block text-sm font-medium text-gray-700">Tên</label>
+                                <input type="text" name="name" id="edit_name" required class="w-full border px-4 py-2 rounded focus:ring focus:ring-blue-300">
                             </div>
                             <div>
-                                <label for="edit_email" class="block text-sm font-medium">Email</label>
-                                <input type="email" name="email" id="edit_email" required readonly class="w-full border px-3 py-2 rounded bg-gray-100">
+                                <label for="edit_email" class="block text-sm font-medium text-gray-700">Email</label>
+                                <input type="email" name="email" id="edit_email" required readonly class="w-full border px-4 py-2 rounded bg-gray-100 focus:ring focus:ring-blue-300">
                             </div>
-                            <div>
-                                <label for="edit_asset_id" class="block text-sm font-medium">Thiết bị quản lý</label>
-                                <select name="equipment_manager" id="edit_asset_id" class="w-full border px-3 py-2 rounded">
-                                    <option value="">Không có</option>
+                            <div class="md:col-span-2">
+                                <label for="edit_asset_id" class="block text-sm font-medium text-gray-700">Thiết bị quản lý</label>
+                                <div id="edit_asset_id" class="grid grid-cols-2 gap-2">
                                     @foreach ($equipment as $asset)
-                                    <option value="{{ $asset->id }}">{{ $asset->id }} - {{ $asset->name }}</option>
+                                    <div class="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            name="equipment_manager[]"
+                                            value="{{ $asset->id }}"
+                                            id="asset_{{ $asset->id }}"
+                                            class="mr-2">
+                                        <label for="asset_{{ $asset->id }}" class="text-sm text-gray-700">
+                                            {{ $asset->id }} - {{ $asset->name }}
+                                        </label>
+                                    </div>
                                     @endforeach
-                                </select>
+                                </div>
                             </div>
                             <div>
-                                <label for="edit_role" class="block text-sm font-medium">Vai trò</label>
-                                <select name="role_id" id="edit_role" class="w-full border px-3 py-2 rounded">
+                                <label for="edit_role" class="block text-sm font-medium text-gray-700">Vai trò</label>
+                                <select name="role_id" id="edit_role" class="w-full border px-4 py-2 rounded focus:ring focus:ring-blue-300">
                                     @foreach ($roles as $role)
                                     <option value="{{ $role->id }}">{{ ucfirst($role->name) }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="md:col-span-2">
-                                <label for="edit_img" class="block text-sm font-medium">Ảnh mới (nếu muốn thay)</label>
-                                <input type="file" name="img" id="edit_img" accept="image/*" class="w-full border px-3 py-2 rounded">
+                                <label for="edit_img" class="block text-sm font-medium text-gray-700">Ảnh mới (nếu muốn thay)</label>
+                                <input type="file" name="img" id="edit_img" accept="image/*" class="w-full border px-4 py-2 rounded focus:ring focus:ring-blue-300">
                             </div>
                         </div>
-                        <div class="pt-2 flex justify-end gap-2">
-                            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Cập nhật</button>
-                            <button type="button" onclick="toggleEditEmployeeForm(false)" class="text-gray-600 hover:underline">Hủy</button>
+                        <div class="flex justify-end gap-4">
+                            <button type="button" onclick="toggleEditEmployeeForm(false)" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Hủy</button>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Cập nhật</button>
                         </div>
                     </form>
                 </div>
@@ -201,15 +218,18 @@
                                     data-name="{{ $employee['name'] }}"
                                     data-email="{{ $employee['email'] }}"
                                     data-role-id="{{ $employee['role_id'] ?? '' }}"
-                                    data-asset-id="{{ $employee['asset_id'] ?? '' }}">
+                                    data-asset-id="{{ json_encode($employee['asset_ids'] ?? []) }}">
+
                                     Sửa
                                 </button>
                                 @endif
                                 @if(in_array('delete_user', $check_permissions))
-                                <button onclick='openDeleteRoleModal({{ $employee["id"] }})'
+                                <button
+                                    onclick="openDeleteModal({{ $employee['id'] }}, '{{ route('employees.delete') }}', 'nhân viên')"
                                     class="text-red-600 ml-2 hover:underline focus:outline-none">
                                     Xóa
                                 </button>
+
 
                                 @endif
                             </td>
@@ -224,7 +244,6 @@
             </div>
         </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
         function toggleAddEmployeeForm() {
@@ -245,37 +264,20 @@
             const name = button.getAttribute('data-name');
             const email = button.getAttribute('data-email');
             const roleId = button.getAttribute('data-role-id');
-            const assetId = button.getAttribute('data-asset-id');
+            const assetIds = JSON.parse(button.getAttribute('data-asset-id') || '[]');
 
             document.getElementById('edit_name').value = name;
             document.getElementById('edit_email').value = email;
             document.getElementById('edit_role').value = roleId;
-            document.getElementById('edit_asset_id').value = assetId;
-
             document.getElementById('editForm').action = `/employees/${id}`;
-        }
-    </script>
-    <script>
-        function openDeleteRoleModal(roleId) {
-            if (confirm('Bạn có chắc chắn muốn xóa không?')) {
-                $.ajax({
-                    url: "{{ route('employees.delete') }}",
-                    type: "DELETE",
-                    data: {
-                        id: roleId,
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(response) {
-                        alert('Xóa vai trò thành công!');
-                        location.reload();
-                    },
-                    error: function(xhr) {
-                        alert('Có lỗi xảy ra. Vui lòng thử lại.');
-                    }
-                });
-            }
-        }
-    </script>
-</body>
 
+            const checkboxes = document.querySelectorAll('#edit_asset_id input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = assetIds.includes(parseInt(checkbox.value));
+            });
+        }
+    </script>
+    <script src="{{ asset('js/delete.js') }}"></script>
+
+</body>
 </html>
