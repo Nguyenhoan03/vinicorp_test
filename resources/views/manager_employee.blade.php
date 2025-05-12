@@ -27,7 +27,23 @@
             <button onclick="toggleAddEmployeeForm()" class="bg-blue-600 text-white px-4 py-2 rounded mb-4">
                 + Thêm nhân viên
             </button>
+            <div class="flex items-center gap-4 mb-4">
+                <form action="{{ route('export_excel') }}" method="GET">
+                    <button class="bg-green-500 text-white px-4 py-2 rounded-md shadow hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        Export Excel
+                    </button>
+                </form>
+
+                <form action="{{ route('import_excel') }}" method="POST" enctype="multipart/form-data" id="importForm" class="flex items-center gap-2">
+                    @csrf
+                    <label for="fileInput" class="bg-blue-600 text-white px-4 py-2 rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer">
+                        Import Excel
+                    </label>
+                    <input type="file" name="file" id="fileInput" class="hidden" onchange="submitImportForm()" required>
+                </form>
+            </div>
             @endif
+
 
             <div class="mb-4 flex items-center gap-4">
                 <form method="GET" action="{{ route('employees.index') }}" class="flex items-center gap-2">
@@ -83,7 +99,7 @@
                             </div>
                             <div>
                                 <label for="role" class="block text-sm font-medium">Vai trò</label>
-                                <select name="role" id="role" required class="w-full border px-3 py-2 rounded">
+                                <select name="role_id" id="role" required class="w-full border px-3 py-2 rounded">
                                     @foreach ($roles as $role)
                                     <option value="{{ $role->id }}">{{ ucfirst($role->name) }}</option>
                                     @endforeach
@@ -192,7 +208,13 @@
                                     </select>
                                 </form>
                             </td>
-                            <td class="px-4 py-3">{{ $employee['assets'] }}</td>
+                            <td class="px-4 py-3">
+                                @foreach(explode(',', $employee['assets']) as $asset)
+                                {{ trim($asset) }}<br>
+                                @endforeach
+                            </td>
+
+
                             <td class="px-4 py-3">
                                 @if (!empty($employee['status']))
                                 <ul class="flex flex-col gap-1">
@@ -277,7 +299,18 @@
             });
         }
     </script>
+    <script>
+        function triggerFileInput() {
+            document.getElementById('fileInput').click();
+        }
+
+        function submitImportForm() {
+            const form = document.getElementById('importForm');
+            form.submit();
+        }
+    </script>
     <script src="{{ asset('js/delete.js') }}"></script>
 
 </body>
+
 </html>

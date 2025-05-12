@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ExcelController;
 use App\Http\Controllers\ManagerAssetController;
 use App\Http\Controllers\ManagerDecentralizationController;
 use App\Http\Middleware\VerifyAccountLogin;
@@ -37,5 +38,7 @@ Route::group(['middleware' => VerifyAccountLogin::class], function () {
     Route::put('/edit_manager_decentralization', [ManagerDecentralizationController::class,'edit'])->name('decentralization.edit');
     Route::delete('/delete_manager_decentralization', [ManagerDecentralizationController::class,'delete'])->name('decentralization.delete');
     
+    Route::get('/export_excel', [ExcelController::class,'export'])->name('export_excel');
+    Route::post('/import_excel', [ExcelController::class,'import'])->name('import_excel');
 
 });

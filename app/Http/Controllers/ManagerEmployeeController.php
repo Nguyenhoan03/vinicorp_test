@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\EmployeeRequest;
 use App\Services\ImageService;
 use App\Traits\ModelFinder;
+use Illuminate\Support\Facades\Log;
 class ManagerEmployeeController extends Controller
 {
     use ModelFinder;
@@ -61,7 +62,7 @@ class ManagerEmployeeController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
-            'role_id' => $request->role,
+            'role_id' => $request->role_id,
             'img' => $imageName,
         ]);
     
@@ -71,7 +72,7 @@ class ManagerEmployeeController extends Controller
     
         return redirect()->route('employees.index')->with('success', 'Thêm nhân viên thành công!');
     }
-    public function edit(Request $request, $id)
+    public function edit(EmployeeRequest $request, $id)
     {
         $employee = $this->findModelOrFail(User::class, $id);
         $employee->fill($request->only(['name', 'email', 'role_id']));
@@ -80,7 +81,7 @@ class ManagerEmployeeController extends Controller
             $employee->assets()->sync($request->equipment_manager);
         } else {
             $employee->assets()->detach();
-        }
+        };
         $employee->save();
         return redirect()->route('employees.index')->with('success', 'Nhân viên đã được cập nhật.');
     }

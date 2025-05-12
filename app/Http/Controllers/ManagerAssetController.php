@@ -32,7 +32,6 @@ class ManagerAssetController extends Controller
         $asset->update($request->validated());
         return redirect()->back()->with('success_edit_manager_asset', 'Cập nhật tài sản thành công!');
     }
-    
 
     public function delete(Request $request)
     {
@@ -41,5 +40,4 @@ class ManagerAssetController extends Controller
         $asset->delete();
         return response()->json(['success' => true]);
     }
-    
 }
