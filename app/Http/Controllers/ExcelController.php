@@ -9,9 +9,9 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ExcelController extends Controller
 {
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new ExportFile, 'users.xlsx');
+       return Excel::download(new ExportFile($request->input('equipment_filter')), 'users.xlsx');
     }
     public function import(Request $request)
     {

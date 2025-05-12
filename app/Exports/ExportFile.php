@@ -8,30 +8,36 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class ExportFile implements FromCollection, WithHeadings
 {
-    /**
-     * @return \Illuminate\Support\Collection
-     */
+    protected $equipmentFilter;
+
+    public function __construct($equipmentFilter = null)
+    {
+        $this->equipmentFilter = $equipmentFilter;
+    }
+
     public function collection()
     {
-        return User::with('assets', 'role')->get()->map(function ($employee) {
-           return [
-            'id' => $employee->id,
-            'name' => $employee->name,
-            'email' => $employee->email,
-            'password' => $employee->password,
-            'img' => $employee->img,
-            'role' => $employee->role ? $employee->role_id . '-' . $employee->role->name : 'Không có',
-            'assets' => $employee->assets->map(function ($asset) {
-                return $asset->name . ' (' . $asset->status . ')';
-            })->join(', ') ?: 'Không có thiết bị',
-        ];
+        $query = User::with(['assets', 'role']);
+
+        if ($this->equipmentFilter) {
+            $query->whereHas('assets', function ($q) {
+                $q->where('assets.id', $this->equipmentFilter);
+            });
+        }
+
+        return $query->get()->map(function ($employee) {
+            return [
+                'id' => $employee->id,
+                'name' => $employee->name,
+                'email' => $employee->email,
+                'password' => $employee->password,
+                'img' => $employee->img,
+                'role' => $employee->role ? $employee->role_id . '-' . $employee->role->name : 'Không có',
+                'assets' => $employee->assets->map(fn($asset) => $asset->name . ' (' . $asset->status . ')')->join(', ') ?: 'Không có thiết bị',
+            ];
         });
     }
 
-    /**
-     * Define the headings for the columns
-     * @return array
-     */
     public function headings(): array
     {
         return [
