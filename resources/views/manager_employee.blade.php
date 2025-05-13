@@ -61,7 +61,8 @@
             </div>
             @endif
 
-
+            <div class="flex d-blog">
+            <!-- lọc theo thiết bị -->
             <div class="mb-4 flex items-center gap-4">
                 <form method="GET" action="{{ route('employees.index') }}" class="flex items-center gap-2">
                     <label for="equipment_filter" class="text-sm font-medium">Lọc theo thiết bị:</label>
@@ -77,6 +78,62 @@
                 </form>
             </div>
 
+            <!--  -->
+
+            <!--Lọc theo tên user  -->
+            <div class="mb-4 flex items-center gap-4">
+                <form method="GET" action="{{ route('employees.index') }}" class="flex items-center gap-2">
+                    <label for="equipment_filter" class="text-sm font-medium">Lọc theo tên:</label>
+                    <select name="equipment_filter" id="equipment_filter" class="border px-3 py-2 rounded">
+                        <option value="">Tất cả</option>
+                        @foreach ($equipment as $eq)
+                        <option value="{{ $eq->id }}" {{ request('equipment_filter') == $eq->id ? 'selected' : '' }}>
+                            {{ $eq->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Lọc</button>
+                </form>
+            </div>
+
+            <!--  -->
+
+
+            <!-- lọc theo email  -->
+            <div class="mb-4 flex items-center gap-4">
+                <form method="GET" action="{{ route('employees.index') }}" class="flex items-center gap-2">
+                    <label for="equipment_filter" class="text-sm font-medium">Lọc theo email:</label>
+                    <select name="equipment_filter" id="equipment_filter" class="border px-3 py-2 rounded">
+                        <option value="">Tất cả</option>
+                        @foreach ($equipment as $eq)
+                        <option value="{{ $eq->id }}" {{ request('equipment_filter') == $eq->id ? 'selected' : '' }}>
+                            {{ $eq->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Lọc</button>
+                </form>
+            </div>
+
+            <!--  -->
+            <!-- lọc theo vai trò -->
+            <div class="mb-4 flex items-center gap-4">
+                <form method="GET" action="{{ route('employees.index') }}" class="flex items-center gap-2">
+                    <label for="equipment_filter" class="text-sm font-medium">Lọc theo vai trò:</label>
+                    <select name="equipment_filter" id="equipment_filter" class="border px-3 py-2 rounded">
+                        <option value="">Tất cả</option>
+                        @foreach ($equipment as $eq)
+                        <option value="{{ $eq->id }}" {{ request('equipment_filter') == $eq->id ? 'selected' : '' }}>
+                            {{ $eq->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Lọc</button>
+                </form>
+            </div>
+
+            <!--  -->
+</div>
             <!-- FORM THÊM NHÂN VIÊN -->
             <div id="addEmployeeForm" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                 <div class="bg-white p-6 rounded-lg w-full max-w-md shadow-xl">

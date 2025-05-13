@@ -17,84 +17,93 @@ HeadingRowFormatter::default('none');
 class ImportFile implements ToModel, WithHeadingRow, WithValidation, WithStartRow
 {
     protected $validStatuses = ['available', 'in_use', 'broken'];
-    protected $requiredHeadings = ['ID', 'Name', 'Email', 'Image', 'Password', 'Role_id', 'Thiết Bị (Trạng Thái)'];
-    protected static $headingChecked = false;
+    protected $requiredHeadings = ['Name', 'Email', 'Password', 'Role_id', 'Thiết Bị (Trạng Thái)'];
+    protected $headingChecked = false;
 
     public function startRow(): int
     {
-        return 2; 
+        return 2;
     }
 
     public function model(array $row)
     {
-        if (!self::$headingChecked) {
+        if (!$this->headingChecked) {
             $this->validateHeadings(array_keys($row));
-            self::$headingChecked = true;
+            $this->headingChecked = true;
         }
 
         try {
-            $user = new User([
-                'id'       => $row['ID'] ?? null,
-                'name'     => $row['Name'],
-                'email'    => $row['Email'],
-                'password' => Hash::make($row['Password']),
-                'role_id'  => $row['Role_id'],
-                'img'      => $row['Image'] ?? null,
-            ]);
-            $user->save();
+            // Tạo hoặc cập nhật user
+            $user = User::updateOrCreate(
+                ['email' => $row['Email']],
+                [
+                    'name'     => $row['Name'],
+                    'password' => Hash::make($row['Password']),
+                    'role_id'  => $row['Role_id'],
+                ]
+            );
 
+            // Nếu có dữ liệu thiết bị
             if (!empty($row['Thiết Bị (Trạng Thái)'])) {
                 $deviceList = explode(',', $row['Thiết Bị (Trạng Thái)']);
-                $assetIds = [];
+                $assetIds = collect(); // ID của asset mới từ Excel
 
                 foreach ($deviceList as $item) {
+                    // Tách tên và trạng thái
                     if (preg_match('/^(.*?)\s*\((.*?)\)$/', trim($item), $matches)) {
-                        $rawName = trim($matches[1]); 
-                        $statusFromExcel = strtolower(trim($matches[2]));
+                        $rawName = trim($matches[1]);
+                        $status = strtolower(trim($matches[2]));
                     } else {
                         $rawName = trim($item);
-                        $statusFromExcel = 'available';
+                        $status = 'available';
                     }
 
+                    if (!in_array($status, $this->validStatuses)) {
+                        throw new \Exception("Trạng thái '$status' của thiết bị '$rawName' không hợp lệ.");
+                    }
+
+                    // Tách tên và type assets
                     $nameParts = explode('-', $rawName);
                     $name = trim($nameParts[0]);
-                    $type = isset($nameParts[1]) ? trim($nameParts[1]) : 'available';
+                    $type = $nameParts[1] ?? 'default';
 
-                    $asset = Asset::where('name', $name)->first();
-
-                    if ($asset) {
-                        $status = $asset->status;
-                    } else {
-                        if (!in_array($statusFromExcel, $this->validStatuses)) {
-                            throw new \Exception("Trạng thái '$statusFromExcel' của thiết bị '$rawName' không hợp lệ. Chỉ chấp nhận: available, in_use, broken.");
-                        }
-
-                        $asset = Asset::create([
-                            'name'   => $name,
-                            'status' => $statusFromExcel,
-                            'type'   => $type,
-                        ]);
-                    }
+                    // Tạo hoặc cập nhật thiết bị
+                    $asset = Asset::updateOrCreate(
+                        ['name' => $name, 'type' => $type],
+                        ['status' => $status]
+                    );
 
                     if ($asset) {
-                        $assetIds[] = $asset->id;
+                        $assetIds->push($asset->id);
                     } else {
-                        Log::warning("Asset not found or not created", [
+                        Log::warning("Không tạo được thiết bị", [
                             'user_email' => $row['Email'],
                             'asset_name' => $name,
-                            'status'     => $statusFromExcel,
+                            'status'     => $status,
                         ]);
                     }
                 }
 
-                if (!empty($assetIds)) {
-                    $user->assets()->attach($assetIds);
+                // Lấy danh sách ID thiết bị hiện tại của user
+                $currentAssetIds = $user->assets()->pluck('assets.id');
+
+                // So sánh để tối ưu hóa
+                $toAttach = $assetIds->diff($currentAssetIds);
+                $toDetach = $currentAssetIds->diff($assetIds);
+
+                // Chỉ thao tác nếu có thay đổi
+                if ($toAttach->isNotEmpty()) {
+                    $user->assets()->attach($toAttach->all());
+                }
+
+                if ($toDetach->isNotEmpty()) {
+                    $user->assets()->detach($toDetach->all());
                 }
             }
 
             return $user;
         } catch (\Throwable $e) {
-            Log::error('Import failed: ' . $e->getMessage(), ['row' => $row]);
+            Log::error('Import thất bại: ' . $e->getMessage(), ['row' => $row]);
             throw $e;
         }
     }
@@ -111,11 +120,10 @@ class ImportFile implements ToModel, WithHeadingRow, WithValidation, WithStartRo
     public function rules(): array
     {
         return [
-            '*.Name'     => ['required', 'string', 'max:255', 'unique:users,name'],
-            '*.Email'    => ['required', 'email', 'unique:users,email'],
+            '*.Name'     => ['required', 'string', 'max:255'],
+            '*.Email'    => ['required', 'email'],
             '*.Password' => ['required', 'string', 'min:2'],
             '*.Role_id'  => ['required', 'integer', 'exists:roles,id'],
-            '*.Image'    => ['nullable', 'string', 'max:255'],
             '*.Thiết Bị (Trạng Thái)' => ['nullable', 'string', 'max:1000'],
         ];
     }
@@ -125,8 +133,6 @@ class ImportFile implements ToModel, WithHeadingRow, WithValidation, WithStartRo
         return [
             '*.Name.required'     => 'Tên là bắt buộc.',
             '*.Email.email'       => 'Email không hợp lệ.',
-            '*.Email.unique'      => 'Email đã tồn tại.',
-            '*.Name.unique'       => 'Tên đã tồn tại.',
             '*.Password.required' => 'Mật khẩu là bắt buộc.',
             '*.Role_id.exists'    => 'Vai trò không tồn tại.',
         ];
