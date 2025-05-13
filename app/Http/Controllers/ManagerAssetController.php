@@ -23,8 +23,12 @@ class ManagerAssetController extends Controller
     }
     public function create(AssetRequest $request)
     {
-        Asset::create($request->validated());
-        return redirect()->back()->with('success_create_manager_asset', 'Tạo tài sản thành công!');
+        try {
+            Asset::create($request->validated());
+        return redirect()->back()->with('success_create_manager_asset', 'Tạo tài sản thành công!');    
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error_create_ManagerAsset' => 'Lỗi khi thêm: ' . $e->getMessage()]);
+        }
     }
     public function edit(AssetRequest $request)
     {

@@ -10,6 +10,7 @@ use App\Http\Requests\EmployeeRequest;
 use App\Services\ImageService;
 use App\Traits\ModelFinder;
 use Illuminate\Support\Facades\Log;
+
 class ManagerEmployeeController extends Controller
 {
     use ModelFinder;
@@ -18,42 +19,37 @@ class ManagerEmployeeController extends Controller
     {
         $this->imageService = $imageService;
     }
-  
+
     public function index(Request $request)
     {
         $filterEquipment = $request->input('equipment_filter');
-        $employees = User::with(['role', 'assets'])
-        ->when($filterEquipment, function ($query, $filterEquipment) {
-            return $query->whereHas('assets', function ($q) use ($filterEquipment) {
-                $q->where('assets.id', $filterEquipment);
+        $employees = User::withRoleAndAssets($filterEquipment)
+            ->get()->map(function ($employee) {
+                return [
+                    'id' => $employee->id,
+                    'name' => $employee->name,
+                    'email' => $employee->email,
+                    'img' => $employee->img,
+                    'role' => $employee->role->name ?? 'Không có',
+                    'role_id' => $employee->role_id ?? null,
+                    'asset_ids' => $employee->assets->pluck('id')->toArray(),
+                    'assets' => $employee->assets->pluck('name')->join(', ') ?: 'Không có thiết bị',
+                    'status' => $employee->assets->map(function ($asset) {
+                        return [
+                            'status' => $asset->status,
+                            'color' => $asset->status === 'available' ? 'bg-green-500' : 'bg-gray-500',
+                        ];
+                    })->toArray(),
+                ];
             });
-        })
-        ->get()->map(function ($employee) {
-            return [
-                'id' => $employee->id,
-                'name' => $employee->name,
-                'email' => $employee->email,
-                'img' => $employee->img,
-                'role' => $employee->role->name ?? 'Không có',
-                'role_id' => $employee->role_id ?? null,
-                'asset_ids' => $employee->assets->pluck('id')->toArray(),
-                'assets' => $employee->assets->pluck('name')->join(', ') ?: 'Không có thiết bị',
-                'status' => $employee->assets->map(function ($asset) {
-                    return [
-                        'status' => $asset->status,
-                        'color' => $asset->status === 'available' ? 'bg-green-500' : 'bg-gray-500',
-                    ];
-                })->toArray(),
-            ];
-        });
-        $roles = Role::select('id','name')->get();
-        $equipment = Asset::select('name','id')->get();
+        $roles = Role::select('id', 'name')->get();
+        $equipment = Asset::select('name', 'id')->get();
         return view('manager_employee', [
             'data' => $employees,
             'roles' => $roles,
             'equipment' => $equipment,
         ]);
-        }
+    }
 
     public function create(EmployeeRequest $request)
     {
@@ -65,18 +61,18 @@ class ManagerEmployeeController extends Controller
             'role_id' => $request->role_id,
             'img' => $imageName,
         ]);
-    
+
         if ($user) {
             $user->assets()->attach($request->equipment_manager);
         }
-    
+
         return redirect()->route('employees.index')->with('success', 'Thêm nhân viên thành công!');
     }
     public function edit(EmployeeRequest $request, $id)
     {
         $employee = $this->findModelOrFail(User::class, $id);
         $employee->fill($request->only(['name', 'email', 'role_id']));
-        $employee->img = $this->imageService->handleImageUpload($request) ?? $employee->img;   
+        $employee->img = $this->imageService->handleImageUpload($request) ?? $employee->img;
         if ($request->has('equipment_manager')) {
             $employee->assets()->sync($request->equipment_manager);
         } else {
@@ -89,8 +85,12 @@ class ManagerEmployeeController extends Controller
     public function delete(Request $request)
     {
         $user = $this->findModelOrFail(User::class, $request->id);
-        $user->assets()->detach(); 
+        $user->assets()->detach();
+        if ($user->img && file_exists(public_path('upload/images/' . $user->img))) {
+            unlink(public_path('upload/images/' . $user->img));
+        }
         $user->delete();
+
         return response()->json(['success' => true]);
     }
 

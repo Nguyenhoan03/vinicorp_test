@@ -14,8 +14,8 @@ class EmployeeRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'name'                => ['required', 'string', 'max:255'],
-            'email'               => ['required', 'email'],
+            'name'                => ['required', 'string','unique:users,name', 'max:255'],
+            'email'               => ['required', 'email','unique:users,email', 'max:255'],
             'role_id'             => ['required', 'exists:roles,id'],
             'img'                 => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'equipment_manager'   => ['nullable', 'array'],

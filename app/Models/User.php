@@ -23,7 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
-        
+
     ];
 
     /**
@@ -58,10 +58,19 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Asset::class);
     }
-    
+
 
     public function hasPermission($permissionName)
     {
         return $this->role && $this->role->permissions->contains('name', $permissionName);
+    }
+    public function scopeWithRoleAndAssets($query, $equipmentFilter = null)
+    {
+        return $query->with(['role', 'assets'])
+            ->when($equipmentFilter, function ($query, $equipmentFilter) {
+                return $query->whereHas('assets', function ($q) use ($equipmentFilter) {
+                    $q->where('assets.id', $equipmentFilter);
+                });
+            });
     }
 }

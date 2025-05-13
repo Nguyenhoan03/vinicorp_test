@@ -20,16 +20,32 @@
 
         <div class="p-6 flex-1">
 
-            @include('components.alert', ['type' => 'success'])
-            <h2 class="text-2xl font-bold mb-4">Danh sách nhân viên</h2>
+            @include('components.alert.alert', ['type' => 'success'])
 
+            <!-- status import excel -->
+            <!-- @if(session('success'))
+            <div class="p-4 mb-4 text-sm text-green-800 bg-green-100 rounded-lg" role="alert">
+                {{ session('success') }}
+            </div>
+            @endif -->
+
+            @if($errors->has('import_error'))
+            <div class="p-4 mb-4 text-sm text-red-800 bg-red-100 rounded-lg" role="alert">
+                {{ $errors->first('import_error') }}
+            </div>
+            @endif
+            <!-- end status import excel -->
+            <!-- alert validate -->
+            @include('components.alert.alert_validate')
+            <!-- end alert validate -->
+            <h2 class="text-2xl font-bold mb-4">Danh sách nhân viên</h2>
             @if(in_array('create_user', $check_permissions))
             <button onclick="toggleAddEmployeeForm()" class="bg-blue-600 text-white px-4 py-2 rounded mb-4">
                 + Thêm nhân viên
             </button>
             <div class="flex items-center gap-4 mb-4">
                 <form action="{{ route('export_excel') }}" method="GET">
-                     <input type="hidden" name="equipment_filter" value="{{ request('equipment_filter') }}">
+                    <input type="hidden" name="equipment_filter" value="{{ request('equipment_filter') }}">
                     <button class="bg-green-500 text-white px-4 py-2 rounded-md shadow hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                         Export Excel
                     </button>

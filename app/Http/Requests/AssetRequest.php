@@ -22,7 +22,7 @@ class AssetRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:assets,name',
             'type' => 'required|string|max:255',
             'status' => 'required|string|max:255',
         ];

@@ -16,14 +16,14 @@
     @include('components.Header_admin')
 
     <div class="flex">
-
         @include('components.Sidebar_admin')
-
         <div class="container mx-auto px-4">
+            @include('components.alert.alert', ['type' => 'success_create_manager_asset', 'title' => 'Thành công!'])
+            @include('components.alert.alert', ['type' => 'success_edit_manager_asset', 'title' => 'Thành công!'])
+            <!-- alert fail -->
 
-
-            @include('components.alert', ['type' => 'success_create_manager_asset', 'title' => 'Thành công!'])
-            @include('components.alert', ['type' => 'success_edit_manager_asset', 'title' => 'Thành công!'])
+            @include('components.alert.alert_validate')
+            @include('components.alert.alert_fail', ['type' => 'error_create_ManagerAsset', 'title' => 'Thất bại!'])
             <h1 class="text-2xl font-bold mb-4">Quản lý thiết bị</h1>
             @if(in_array('create_asset', $check_permissions))
             <button onclick="toggleAddEquimentForm()" class="bg-blue-600 text-white px-4 py-2 rounded mb-4 inline-block">

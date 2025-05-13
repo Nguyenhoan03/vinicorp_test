@@ -26,7 +26,10 @@
             <!-- Vai trò và phân quyền -->
             <div class="container mx-auto px-4 py-6">
 
-                @include('components.alert', ['type' => 'success'])
+                @include('components.alert.alert', ['type' => 'success'])
+                <!-- alert validate -->
+                @include('components.alert.alert_validate')
+                 <!-- end alert validate -->
                 <h2 class="text-2xl font-bold text-center mb-6">Quản lý Vai Trò và Quyền</h2>
 
                 <!-- Danh sách vai trò -->

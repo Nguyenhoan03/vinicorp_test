@@ -17,14 +17,7 @@ class ExportFile implements FromCollection, WithHeadings
 
     public function collection()
     {
-        $query = User::with(['assets', 'role']);
-
-        if ($this->equipmentFilter) {
-            $query->whereHas('assets', function ($q) {
-                $q->where('assets.id', $this->equipmentFilter);
-            });
-        }
-
+    $query = User::withRoleAndAssets($this->equipmentFilter);
         return $query->get()->map(function ($employee) {
             return [
                 'id' => $employee->id,
