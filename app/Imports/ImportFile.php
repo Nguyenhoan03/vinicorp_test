@@ -9,16 +9,29 @@ use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\WithStartRow;
 use Maatwebsite\Excel\Imports\HeadingRowFormatter;
 
 HeadingRowFormatter::default('none');
 
-class ImportFile implements ToModel, WithHeadingRow, WithValidation
+class ImportFile implements ToModel, WithHeadingRow, WithValidation, WithStartRow
 {
     protected $validStatuses = ['available', 'in_use', 'broken'];
+    protected $requiredHeadings = ['ID', 'Name', 'Email', 'Image', 'Password', 'Role_id', 'Thiết Bị (Trạng Thái)'];
+    protected static $headingChecked = false;
+
+    public function startRow(): int
+    {
+        return 2; 
+    }
 
     public function model(array $row)
     {
+        if (!self::$headingChecked) {
+            $this->validateHeadings(array_keys($row));
+            self::$headingChecked = true;
+        }
+
         try {
             $user = new User([
                 'id'       => $row['ID'] ?? null,
@@ -43,23 +56,19 @@ class ImportFile implements ToModel, WithHeadingRow, WithValidation
                         $statusFromExcel = 'available';
                     }
 
-                    // Phân tích name và type nếu có dấu '-'
                     $nameParts = explode('-', $rawName);
                     $name = trim($nameParts[0]);
-                    $type = isset($nameParts[1]) ? trim($nameParts[1]) : 'default';
+                    $type = isset($nameParts[1]) ? trim($nameParts[1]) : 'available';
 
-                    // Kiểm tra thiết bị có tồn tại không
                     $asset = Asset::where('name', $name)->first();
 
                     if ($asset) {
-                        $status = $asset->status; // Thiết bị đã tồn tại: dùng status hiện tại
+                        $status = $asset->status;
                     } else {
-                        // Thiết bị mới: kiểm tra status hợp lệ
                         if (!in_array($statusFromExcel, $this->validStatuses)) {
                             throw new \Exception("Trạng thái '$statusFromExcel' của thiết bị '$rawName' không hợp lệ. Chỉ chấp nhận: available, in_use, broken.");
                         }
 
-                        // Tạo mới Asset với name, status và type
                         $asset = Asset::create([
                             'name'   => $name,
                             'status' => $statusFromExcel,
@@ -86,7 +95,16 @@ class ImportFile implements ToModel, WithHeadingRow, WithValidation
             return $user;
         } catch (\Throwable $e) {
             Log::error('Import failed: ' . $e->getMessage(), ['row' => $row]);
-            return null;
+            throw $e;
+        }
+    }
+
+    protected function validateHeadings(array $headings)
+    {
+        foreach ($this->requiredHeadings as $required) {
+            if (!in_array($required, $headings)) {
+                throw new \Exception("Thiếu cột bắt buộc: '{$required}'. Vui lòng kiểm tra lại tiêu đề cột trong file Excel.");
+            }
         }
     }
 
@@ -107,6 +125,9 @@ class ImportFile implements ToModel, WithHeadingRow, WithValidation
         return [
             '*.Name.required'     => 'Tên là bắt buộc.',
             '*.Email.email'       => 'Email không hợp lệ.',
+            '*.Email.unique'      => 'Email đã tồn tại.',
+            '*.Name.unique'       => 'Tên đã tồn tại.',
+            '*.Password.required' => 'Mật khẩu là bắt buộc.',
             '*.Role_id.exists'    => 'Vai trò không tồn tại.',
         ];
     }
