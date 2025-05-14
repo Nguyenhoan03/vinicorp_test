@@ -45,11 +45,14 @@
             </button>
             <div class="flex items-center gap-4 mb-4">
                 <form action="{{ route('export_excel') }}" method="GET">
-                    <input type="hidden" name="equipment_filter" value="{{ request('equipment_filter') }}">
+                    @foreach(request()->query() as $key => $value)
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
                     <button class="bg-green-500 text-white px-4 py-2 rounded-md shadow hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                         Export Excel
                     </button>
                 </form>
+
 
                 <form action="{{ route('import_excel') }}" method="POST" enctype="multipart/form-data" id="importForm" class="flex items-center gap-2">
                     @csrf
@@ -61,79 +64,56 @@
             </div>
             @endif
 
-            <div class="flex d-blog">
-            <!-- lọc theo thiết bị -->
-            <div class="mb-4 flex items-center gap-4">
-                <form method="GET" action="{{ route('employees.index') }}" class="flex items-center gap-2">
-                    <label for="equipment_filter" class="text-sm font-medium">Lọc theo thiết bị:</label>
-                    <select name="equipment_filter" id="equipment_filter" class="border px-3 py-2 rounded">
-                        <option value="">Tất cả</option>
-                        @foreach ($equipment as $eq)
-                        <option value="{{ $eq->id }}" {{ request('equipment_filter') == $eq->id ? 'selected' : '' }}>
-                            {{ $eq->name }}
-                        </option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Lọc</button>
+            <!-- Bộ lọc người dùng -->
+            <div class="mb-6">
+                <form method="GET" action="{{ route('employees.index') }}">
+                    <div class="flex flex-col md:flex-row gap-4 items-end">
+                        <!-- Lọc theo thiết bị -->
+                        <div class="flex flex-col flex-1">
+                            <label for="equipment_filter" class="text-sm font-medium mb-1">Lọc theo thiết bị:</label>
+                            <select name="equipment_filter" id="equipment_filter" class="border px-3 py-2 rounded">
+                                <option value="">Tất cả</option>
+                                @foreach ($equipment as $eq)
+                                <option value="{{ $eq->id }}" {{ request('equipment_filter') == $eq->id ? 'selected' : '' }}>
+                                    {{ $eq->name }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <!-- Lọc theo tên -->
+                        <div class="flex flex-col flex-1">
+                            <label for="name_filter" class="text-sm font-medium mb-1">Lọc theo tên:</label>
+                            <input type="text" name="name_filter" id="name_filter"
+                                class="border px-3 py-2 rounded" placeholder="Nhập tên người dùng"
+                                value="{{ request('name_filter') }}">
+                        </div>
+                        <!-- Lọc theo email -->
+                        <div class="flex flex-col flex-1">
+                            <label for="email_filter" class="text-sm font-medium mb-1">Lọc theo email:</label>
+                            <input type="text" name="email_filter" id="email_filter"
+                                class="border px-3 py-2 rounded" placeholder="Nhập email"
+                                value="{{ request('email_filter') }}">
+                        </div>
+                        <!-- Lọc theo vai trò -->
+                        <div class="flex flex-col flex-1">
+                            <label for="role_filter" class="text-sm font-medium mb-1">Lọc theo vai trò:</label>
+                            <select name="role_filter" id="role_filter" class="border px-3 py-2 rounded">
+                                <option value="">Tất cả</option>
+                                @foreach ($roles as $role)
+                                <option value="{{ $role->id }}" {{ request('role_filter') == $role->id ? 'selected' : '' }}>
+                                    {{ $role->name }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <!-- Button lọc -->
+                        <div>
+                            <button type="submit" class="bg-blue-600 text-white px-8 py-2 rounded hover:bg-blue-700">Lọc</button>
+                        </div>
+                    </div>
                 </form>
             </div>
 
-            <!--  -->
-
-            <!--Lọc theo tên user  -->
-            <div class="mb-4 flex items-center gap-4">
-                <form method="GET" action="{{ route('employees.index') }}" class="flex items-center gap-2">
-                    <label for="equipment_filter" class="text-sm font-medium">Lọc theo tên:</label>
-                    <select name="equipment_filter" id="equipment_filter" class="border px-3 py-2 rounded">
-                        <option value="">Tất cả</option>
-                        @foreach ($equipment as $eq)
-                        <option value="{{ $eq->id }}" {{ request('equipment_filter') == $eq->id ? 'selected' : '' }}>
-                            {{ $eq->name }}
-                        </option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Lọc</button>
-                </form>
-            </div>
-
-            <!--  -->
-
-
-            <!-- lọc theo email  -->
-            <div class="mb-4 flex items-center gap-4">
-                <form method="GET" action="{{ route('employees.index') }}" class="flex items-center gap-2">
-                    <label for="equipment_filter" class="text-sm font-medium">Lọc theo email:</label>
-                    <select name="equipment_filter" id="equipment_filter" class="border px-3 py-2 rounded">
-                        <option value="">Tất cả</option>
-                        @foreach ($equipment as $eq)
-                        <option value="{{ $eq->id }}" {{ request('equipment_filter') == $eq->id ? 'selected' : '' }}>
-                            {{ $eq->name }}
-                        </option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Lọc</button>
-                </form>
-            </div>
-
-            <!--  -->
-            <!-- lọc theo vai trò -->
-            <div class="mb-4 flex items-center gap-4">
-                <form method="GET" action="{{ route('employees.index') }}" class="flex items-center gap-2">
-                    <label for="equipment_filter" class="text-sm font-medium">Lọc theo vai trò:</label>
-                    <select name="equipment_filter" id="equipment_filter" class="border px-3 py-2 rounded">
-                        <option value="">Tất cả</option>
-                        @foreach ($equipment as $eq)
-                        <option value="{{ $eq->id }}" {{ request('equipment_filter') == $eq->id ? 'selected' : '' }}>
-                            {{ $eq->name }}
-                        </option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Lọc</button>
-                </form>
-            </div>
-
-            <!--  -->
-</div>
             <!-- FORM THÊM NHÂN VIÊN -->
             <div id="addEmployeeForm" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                 <div class="bg-white p-6 rounded-lg w-full max-w-md shadow-xl">

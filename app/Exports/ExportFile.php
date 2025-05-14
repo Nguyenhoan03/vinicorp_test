@@ -5,28 +5,32 @@ namespace App\Exports;
 use App\Models\User;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 
-class ExportFile implements FromCollection, WithHeadings
+class ExportFile implements FromCollection, WithHeadings, WithColumnWidths
 {
-    protected $equipmentFilter;
+    protected $FilterUser;
 
-    public function __construct($equipmentFilter = null)
+    public function __construct($FilterUser = [])
     {
-        $this->equipmentFilter = $equipmentFilter;
+        $this->FilterUser = $FilterUser;
     }
 
     public function collection()
     {
-    $query = User::withRoleAndAssets($this->equipmentFilter);
+        $query = User::FilterUser($this->FilterUser);
         return $query->get()->map(function ($employee) {
+            $assets = $employee->assets->map(function ($asset) {
+                return $asset->name . ' (' . $asset->status . ')';
+            })->implode(', ') ?: 'Không có thiết bị';
+
             return [
-                'id' => $employee->id,
-                'name' => $employee->name,
-                'email' => $employee->email,
-                // 'password' => $employee->password,
-                'img' => $employee->img,
-                'role' => $employee->role ? $employee->role_id . '-' . $employee->role->name : 'Không có',
-                'assets' => $employee->assets->map(fn($asset) => $asset->name . ' (' . $asset->status . ')')->join(', ') ?: 'Không có thiết bị',
+                // 'ID' => $employee->id,
+                'Name' => $employee->name,
+                'Email' => $employee->email,
+                // 'Image' => $employee->img,
+                'Role (Role ID)' => $employee->role ? $employee->role_id . '-' . $employee->role->name : 'Không có',
+                'Thiết Bị (Trạng Thái)' => $assets,
             ];
         });
     }
@@ -34,13 +38,25 @@ class ExportFile implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
-            'ID',
+            // 'ID',
             'Name',
             'Email',
-            // 'Password',
-            'Image',
+            // 'Image',
             'Role (Role ID)',
             'Thiết Bị (Trạng Thái)',
+        ];
+    }
+
+    // Thiết lập độ rộng cho từng cột
+    public function columnWidths(): array
+    {
+        return [
+            // 'A' => 8,    // ID
+            'A' => 25,   // Name
+            'B' => 50,   // Email
+            'C' => 20,   // Image
+            'D' => 125,   // Role (Role ID)
+            // 'F' => 120,   // Thiết Bị (Trạng Thái)
         ];
     }
 }

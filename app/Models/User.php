@@ -64,13 +64,23 @@ class User extends Authenticatable
     {
         return $this->role && $this->role->permissions->contains('name', $permissionName);
     }
-    public function scopeWithRoleAndAssets($query, $equipmentFilter = null)
+    public function scopeFilterUser($query, $Filter = [])
     {
-        return $query->with(['role', 'assets'])
-            ->when($equipmentFilter, function ($query, $equipmentFilter) {
-                return $query->whereHas('assets', function ($q) use ($equipmentFilter) {
-                    $q->where('assets.id', $equipmentFilter);
-                });
+        $query->with('role');
+        if (!empty($Filter['equipment_filter'])) {
+            $query->with('assets')->whereHas('assets', function ($q) use ($Filter) {
+                $q->where('assets.id', $Filter['equipment_filter']);
             });
+        }
+        if (!empty($Filter['name_filter'])) {
+            $query->where('name', 'like', '%' . $Filter['name_filter'] . '%');
+        }
+        if (!empty($Filter['email_filter'])) {
+            $query->where('email', 'like', '%' . $Filter['email_filter'] . '%');
+        }
+        if (!empty($Filter['role_filter'])) {
+            $query->where('role_id', $Filter['role_filter']);
+        }
+        return $query;
     }
 }

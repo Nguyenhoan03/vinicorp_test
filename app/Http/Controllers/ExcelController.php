@@ -12,7 +12,7 @@ class ExcelController extends Controller
 {
     public function export(Request $request)
     {
-        return Excel::download(new ExportFile($request->input('equipment_filter')), 'users.xlsx');
+        return Excel::download(new ExportFile($request->only(['equipment_filter','name_filter','email_filter','role_filter'])), 'users.xlsx');
     }
     public function import(Request $request)
     {

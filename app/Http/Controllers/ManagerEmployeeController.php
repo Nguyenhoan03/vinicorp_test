@@ -22,8 +22,8 @@ class ManagerEmployeeController extends Controller
 
     public function index(Request $request)
     {
-        $filterEquipment = $request->input('equipment_filter');
-        $employees = User::withRoleAndAssets($filterEquipment)
+        $filterUser = $request->only(['equipment_filter','name_filter','email_filter','role_filter']);
+        $employees = User::FilterUser($filterUser)
             ->get()->map(function ($employee) {
                 return [
                     'id' => $employee->id,
@@ -77,7 +77,7 @@ class ManagerEmployeeController extends Controller
             $employee->assets()->sync($request->equipment_manager);
         } else {
             $employee->assets()->detach();
-        };
+        }
         $employee->save();
         return redirect()->route('employees.index')->with('success', 'Nhân viên đã được cập nhật.');
     }
