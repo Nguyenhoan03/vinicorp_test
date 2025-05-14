@@ -19,7 +19,6 @@ class ExcelController extends Controller
         $request->validate([
             'file' => 'required|mimes:xlsx,csv,xls'
         ]);
-
         try {
             Excel::import(new ImportFile, $request->file('file'));
             return back()->with('success', 'Import thành công!');

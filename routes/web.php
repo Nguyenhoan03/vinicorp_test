@@ -40,5 +40,11 @@ Route::group(['middleware' => VerifyAccountLogin::class], function () {
     
     Route::get('/export_excel', [ExcelController::class,'export'])->name('export_excel');
     Route::post('/import_excel', [ExcelController::class,'import'])->name('import_excel');
+    
+    
+   
+Route::get('/profile_view', [AuthController::class, 'profileView'])->name('profile.view');
+Route::put('/profile_update/{id}', [AuthController::class, 'update'])->name('profile.update');
+    Route::put('/profile_change_pass', [AuthController::class,'change_pass'])->name('password.change');
 
 });
