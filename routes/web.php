@@ -7,6 +7,7 @@ use App\Http\Controllers\ManagerAssetController;
 use App\Http\Controllers\ManagerDecentralizationController;
 use App\Http\Middleware\VerifyAccountLogin;
 use App\Http\Controllers\ManagerEmployeeController;
+
 Route::get('/', function () {
     return view('index');
 });
@@ -26,25 +27,27 @@ Route::group(['middleware' => VerifyAccountLogin::class], function () {
 
 
 
-    Route::get('/manager_asset', [ManagerAssetController::class,'index'])->name('assets.index');
-    Route::post('/create_manager_asset', [ManagerAssetController::class,'create'])->name('assets.create');
-    Route::put('/edit_manager_asset', [ManagerAssetController::class,'edit'])->name('assets.edit');
-    Route::delete('/delete_manager_asset', [ManagerAssetController::class,'delete'])->name('assets.delete');
+    Route::get('/manager_asset', [ManagerAssetController::class, 'index'])->name('assets.index');
+    Route::post('/create_manager_asset', [ManagerAssetController::class, 'create'])->name('assets.create');
+    Route::put('/edit_manager_asset', [ManagerAssetController::class, 'edit'])->name('assets.edit');
+    Route::delete('/delete_manager_asset', [ManagerAssetController::class, 'delete'])->name('assets.delete');
 
 
 
-    Route::get('/manager_decentralization', [ManagerDecentralizationController::class,'index'])->name('decentralization.index');
-    Route::post('/create_manager_decentralization', [ManagerDecentralizationController::class,'create'])->name('decentralization.create');
-    Route::put('/edit_manager_decentralization', [ManagerDecentralizationController::class,'edit'])->name('decentralization.edit');
-    Route::delete('/delete_manager_decentralization', [ManagerDecentralizationController::class,'delete'])->name('decentralization.delete');
-    
-    Route::get('/export_excel', [ExcelController::class,'export'])->name('export_excel');
-    Route::post('/import_excel', [ExcelController::class,'import'])->name('import_excel');
-    
-    
-   
-Route::get('/profile_view', [AuthController::class, 'profileView'])->name('profile.view');
-Route::put('/profile_update/{id}', [AuthController::class, 'update'])->name('profile.update');
-    Route::put('/profile_change_pass', [AuthController::class,'change_pass'])->name('password.change');
+    Route::get('/manager_decentralization', [ManagerDecentralizationController::class, 'index'])->name('decentralization.index');
+    Route::post('/create_manager_decentralization', [ManagerDecentralizationController::class, 'create'])->name('decentralization.create');
+    Route::put('/edit_manager_decentralization', [ManagerDecentralizationController::class, 'edit'])->name('decentralization.edit');
+    Route::delete('/delete_manager_decentralization', [ManagerDecentralizationController::class, 'delete'])->name('decentralization.delete');
+
+    Route::get('/export_excel', [ExcelController::class, 'export'])->name('export_excel');
+    Route::post('/import_excel', [ExcelController::class, 'import'])->name('import_excel');
+
+
+
+    Route::get('/profile_view', [AuthController::class, 'profileView'])->name('profile.view');
+    Route::put('/profile_update/{id}', [AuthController::class, 'update'])->name('profile.update');
+ 
+    Route::get('/profile_list_equiqment', [AuthController::class, 'list_equiqment'])->name('profile.list_equiqment');
+ 
 
 });

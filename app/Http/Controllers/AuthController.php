@@ -9,6 +9,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Traits\ModelFinder;
+use App\Mail\PasswordChangedMail;
+use Illuminate\Support\Facades\Mail;
 class AuthController extends Controller
 {
     use ModelFinder;
@@ -60,6 +62,7 @@ class AuthController extends Controller
                 return back()->withErrors(['new_password' => 'Mật khẩu mới phải khác mật khẩu cũ!'])->withInput();
             }
             $user->password = bcrypt($request->new_password);
+            Mail::to($user->email)->send((new PasswordChangedMail($user))->from('phehoan@gmail.com', 'Ban quản trị'));
         }
 
         if ($request->hasFile('img')) {
@@ -69,6 +72,14 @@ class AuthController extends Controller
         $user->name = $request->name;
         $user->save();
 
+
         return redirect()->route('profile.view')->with('success', 'Cập nhật thành công!');
     }
+
+    public function list_equiqment()
+{
+    $user = Auth::user();
+    $assets = $user->assets;
+    return view('profile.list_equiqment', compact('assets'));
+}
 }
