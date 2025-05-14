@@ -11,7 +11,7 @@
                 </button>
                 <div class="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-50">
                     <a href="{{ route('profile.view') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Cập nhật tài khoản</a>
-                    <a href="{{ route('password.change') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Đổi mật khẩu</a>
+                    <a href="{{ route('password.change') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Danh sách thiết bị được cấp</a>
                     <form action="/logout" method="post" class="block">
                         @csrf
                         <button type="submit" class="w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100">Đăng xuất</button>

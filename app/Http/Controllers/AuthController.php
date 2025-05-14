@@ -7,8 +7,11 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\ImageService;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\UpdateProfileRequest;
+use App\Traits\ModelFinder;
 class AuthController extends Controller
 {
+    use ModelFinder;
     protected $imageService;
     public function __construct(ImageService $imageService)
     {
@@ -44,42 +47,28 @@ class AuthController extends Controller
         return view('profile.view', ['user' => $user]);
     }
 
-    public function update(Request $request, $id)
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        'new_password' => 'nullable|string|min:2|confirmed',
-    ]);
 
-    $user = User::findOrFail($id);
+    public function update(UpdateProfileRequest $request, $id)
+    {
+        $user = $this->findModelOrFail(User::class,$id);
 
-    // Xử lý ảnh đại diện
-    if ($request->hasFile('img')) {
-        $img = $this->imageService->handleImageUpload($request);
-        $user->img = $img;
+        if ($request->filled('new_password')) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors(['current_password' => 'Mật khẩu cũ không đúng!'])->withInput();
+            }
+            if (Hash::check($request->new_password, $user->password)) {
+                return back()->withErrors(['new_password' => 'Mật khẩu mới phải khác mật khẩu cũ!'])->withInput();
+            }
+            $user->password = bcrypt($request->new_password);
+        }
+
+        if ($request->hasFile('img')) {
+            $user->img = $this->imageService->handleImageUpload($request);
+        }
+
+        $user->name = $request->name;
+        $user->save();
+
+        return redirect()->route('profile.view')->with('success', 'Cập nhật thành công!');
     }
-    $user->name = $request->name;
-
-    // Xử lý đổi mật khẩu nếu có nhập
-    if ($request->filled('new_password')) {
-        // Kiểm tra đã nhập mật khẩu cũ correct chưa
-        if (!$request->filled('current_password')) {
-            return back()->withErrors(['current_password' => 'Vui lòng nhập mật khẩu cũ để đổi mật khẩu!'])->withInput();
-        }
-        // Kiểm tra mật khẩu cũ có đúng không
-        if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors(['current_password' => 'Mật khẩu cũ không đúng!'])->withInput();
-        }
-        // Kiểm tra mật khẩu mới khác mật khẩu cũ
-        if (Hash::check($request->new_password, $user->password)) {
-            return back()->withErrors(['new_password' => 'Mật khẩu mới phải khác mật khẩu cũ!'])->withInput();
-        }
-        $user->password = bcrypt($request->new_password);
-    }
-
-    $user->save();
-
-    return redirect()->route('profile.view')->with('success', 'Cập nhật thành công!');
-}
 }
