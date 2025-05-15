@@ -12,6 +12,8 @@
 
 <body>
   <div class="login-box">
+    @include('components.alert.alert', ['type' => 'success', 'title' => 'Đăng ký Thành công!'])
+
     <h2>Đăng nhập hệ thống</h2>
     @include('components.alert.alert_validate')
     <form method="POST" action="/login" id="loginForm">

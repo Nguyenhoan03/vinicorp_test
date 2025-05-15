@@ -16,6 +16,9 @@ use App\Models\Asset;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\UpdateDeviceRequest;
+use Illuminate\Auth\Events\Registered;
+
+
 
 class AuthController extends Controller
 {
@@ -150,5 +153,25 @@ class AuthController extends Controller
         return view('register');
     }
 
-    public function register() {}
+    public function register(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:2|confirmed',
+        ]);
+        // Tạo user
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+            'role_id' => 2,
+        ]);
+        // Phát event Registered để Laravel biết user cần xác minh
+        event(new Registered($user));
+        // Đăng nhập user (nếu muốn redirect tới verify ngay)
+        Auth::login($user);
+        // Redirect tới trang yêu cầu xác minh
+        return redirect()->route('verification.notice')->with('success', 'Vui lòng kiểm tra email để xác minh tài khoản!');
+    }
 }
