@@ -106,28 +106,24 @@ class AuthController extends Controller
     {
         try {
             $user = $this->findModelOrFail(User::class, $request->id);
-            Asset::where('name', $request->name)->update([
-                'status' => $request->status,
-            ]);
 
-            // gửi mail cho admin khi employee thay đổi thiết bị 
+            // Cập nhật trạng thái thiết bị
+            $asset = Asset::where('name', $request->name)->first();
+            if (!$asset) {
+                return back()->with('error', 'Thiết bị không tồn tại!');
+            }
+            $asset->status = $request->status;
+            $asset->save();
+
+            // Gửi mail cho admin
             $adminRoleId = Role::where('name', 'admin')->value('id');
             $admin_emails = User::where('role_id', $adminRoleId)->pluck('email')->toArray();
-            if (!empty($admin_emails)) {
-                foreach ($admin_emails as $email) {
-                    try {
-                        Mail::to($email)->queue(
-                            (new DeviceStatusChangedMail($user, $request->name, $request->status))
-                                ->from('phehoan@gmail.com', 'Ban quản trị')
-                        );
-                    } catch (\Throwable $e) {
-                        Log::error("Không gửi được mail tới $email: " . $e->getMessage());
-                    }
-                }
-            }
-            Mail::to($user->email)->queue(
-                (new DeviceStatusChangedMail($user, $request->name, $request->status))->from('phehoan@gmail.com', 'Ban quản trị')
-            );
+            $this->sendDeviceStatusMail($admin_emails, $user, $asset->name, $request->status);
+
+            // Gửi mail cho tất cả user quản lý thiết bị (bao gồm cả user thay đổi thiết bị)
+            $all_user_emails = $asset->users()->pluck('email')->unique()->toArray();
+            $this->sendDeviceStatusMail($all_user_emails, $user, $asset->name, $request->status);
+
             return back()->with('success', 'Cập nhật thiết bị thành công!');
         } catch (\Throwable $throw) {
             Log::error("Lỗi cập nhật thiết bị: " . $throw->getMessage());
@@ -135,12 +131,24 @@ class AuthController extends Controller
         }
     }
 
+    protected function sendDeviceStatusMail($emails, $user, $assetName, $status)
+    {
+        foreach ($emails as $email) {
+            try {
+                Mail::to($email)->queue(
+                    (new DeviceStatusChangedMail($user, $assetName, $status))
+                        ->from('phehoan@gmail.com', 'Ban quản trị')
+                );
+            } catch (\Throwable $e) {
+                Log::error("Không gửi được mail tới $email: " . $e->getMessage());
+            }
+        }
+    }
 
-    public function view_register(){
+    public function view_register()
+    {
         return view('register');
     }
 
-    public function register(){
-        
-    }
+    public function register() {}
 }
