@@ -26,16 +26,17 @@ class ManagerDecentralizationController extends Controller
         return redirect()->back()->with('success', 'Tạo vai trò thành công!');
     }
 
-
     public function edit(RoleRequest $request)
     {
         $role = $this->findModelOrFail(Role::class, $request->id);
-        $role->update(['name' => $request->role_name]);
+        if ($request->filled('role_name') && $request->role_name !== $role->name) {
+            $role->update(['name' => $request->role_name]);
+        }
+
         $role->permissions()->sync($request->permissions);
 
         return redirect()->back()->with('success', 'Vai trò đã được cập nhật!');
     }
-
 
     public function delete(Request $request)
     {

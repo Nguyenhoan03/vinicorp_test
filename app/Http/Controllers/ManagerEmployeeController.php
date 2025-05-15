@@ -71,7 +71,7 @@ class ManagerEmployeeController extends Controller
     public function edit(EmployeeRequest $request, $id)
     {
         $employee = $this->findModelOrFail(User::class, $id);
-        $employee->fill($request->only(['name', 'email', 'role_id']));
+        $employee->fill($request->only(['name', 'role_id']));
         $employee->img = $this->imageService->handleImageUpload($request) ?? $employee->img;
         if ($request->has('equipment_manager')) {
             $employee->assets()->sync($request->equipment_manager);

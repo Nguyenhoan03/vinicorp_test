@@ -21,8 +21,9 @@ class AssetRequest extends FormRequest
      */
     public function rules(): array
     {
+        $assetId = $this->id ?? null;
         return [
-            'name' => 'required|string|max:255|unique:assets,name',
+            'name' => 'required|string|max:255|unique:assets,name' . ($assetId ? ',' . $assetId : ''),
             'type' => 'required|string|max:255',
             'status' => 'required|string|max:255',
         ];

@@ -11,11 +11,12 @@ class EmployeeRequest extends FormRequest
         return true;
     }
 
-    public function rules(): array
+   public function rules(): array
     {
+        $userId = $this->id ?? null;
         $rules = [
-            'name'                => ['required', 'string','unique:users,name', 'max:255'],
-            'email'               => ['required', 'email','unique:users,email', 'max:255'],
+            'name'                => ['string', 'max:255'],
+            'email'               => ['email', 'max:255', 'unique:users,email' . ($userId ? ',' . $userId : '')],
             'role_id'             => ['required', 'exists:roles,id'],
             'img'                 => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'equipment_manager'   => ['nullable', 'array'],
@@ -24,6 +25,9 @@ class EmployeeRequest extends FormRequest
 
         if ($this->isMethod('post')) {
             $rules['password'] = ['required', 'string', 'min:2'];
+            $rules['name'] = ['required','unique:users,name' . $rules['name']];
+            $rules['email'] = ['required' . $rules['email']];
+
         }
 
         return $rules;

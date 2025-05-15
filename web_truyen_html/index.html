@@ -15,10 +15,10 @@
 
     <!-- Bootstrap CSS v5.2.1 -->
 
-    <link href="{{asset('/assets/bootstrap.min.css')}}" rel="stylesheet">
+    <link href="./assets/bootstrap.min.css" rel="stylesheet">
 
     <link rel="shortcut icon" href="https://suustore.com/assets/frontend/images/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="{{asset('/assets/app.css')}}">
+    <link rel="stylesheet" href="./assets/app.css">
 
 
 
@@ -108,43 +108,7 @@
                                 </li>
                             </ul>
                         </li>
-
-
-                        @auth
-                        <li class="nav-item dropdown ms-auto">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                               
-                                    <img
-                                        src="{{ asset('upload/images/' . Auth::user()->img) }}"
-                                        onerror="this.onerror=null;this.src='https://thumbs.dreamstime.com/z/default-avatar-profile-icon-social-media-user-image-gray-blank-silhouette-vector-illustration-305504015.jpg';"
-                                        alt=""
-                                        style="width: 30px;height: 30px;margin-right:10px; border-radius: 50%">
-                               
-                                {{ Auth::user()->name ?? 'User' }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li>
-                                    <a href="{{ route('profile.view') }}" class="dropdown-item">Quản lý tài khoản</a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('profile.list_equiqment') }}" class="dropdown-item">Danh sách thiết bị được cấp</a>
-                                </li>
-                                <li>
-                                    <form action="/logout" method="POST" class="mb-0">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item text-danger">Đăng xuất</button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                        @else
-                        <li class="nav-item ms-auto">
-                            <a href="{{ route('view_login') }}" class="nav-link text-success">Đăng nhập</a>
-                        </li>
-                        @endauth
                     </ul>
-
-
 
                     <div class="form-check form-switch me-3 d-flex align-items-center">
                         <label class="form-check-label">
@@ -1810,20 +1774,20 @@
         </div>
     </div>
 
-    <script src="{{asset('/assets/jquery.min.js')}}">
+    <script src="./assets/jquery.min.js">
     </script>
 
-    <script src="{{asset('/assets/popper.min.js')}}">
+    <script src="./assets/popper.min.js">
     </script>
 
-    <script src="{{asset('/assets/bootstrap.min.js')}}">
+    <script src="./assets/bootstrap.min.js">
     </script>
 
 
 
-    <script src="{{asset('/assets/app.js')}}">
+    <script src="./assets/app.js">
     </script>
-    <script src="{{asset('/assets/common.js')}}"></script>
+    <script src="./assets/common.js"></script>
 
 
 

@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateProfileRequest;
 use App\Traits\ModelFinder;
 use App\Mail\PasswordChangedMail;
 use Illuminate\Support\Facades\Mail;
+
 class AuthController extends Controller
 {
     use ModelFinder;
@@ -19,6 +20,13 @@ class AuthController extends Controller
     {
         $this->imageService = $imageService;
     }
+
+    public function view_login()
+    {
+        return view('login');
+    }
+
+
     public function login(Request $request)
     {
         if (Auth::attempt($request->only('email', 'password'))) {
@@ -32,10 +40,14 @@ class AuthController extends Controller
                     'role' => $role,
                     'permissions' => $permissions,
                 ]);
+                return redirect('/');
             }
-            return redirect()->route('dashboard');
+
+            // Nếu user không có role
+            return redirect('/')->withErrors(['error_login' => 'Tài khoản không có quyền truy cập']);
         }
-        return redirect()->back()->withErrors(['error_login' => 'thông tin đăng nhập không chính xác']);
+
+        return redirect()->back()->withErrors(['error_login' => 'Thông tin đăng nhập không chính xác']);
     }
     public function logout()
     {
@@ -52,7 +64,7 @@ class AuthController extends Controller
 
     public function update(UpdateProfileRequest $request, $id)
     {
-        $user = $this->findModelOrFail(User::class,$id);
+        $user = $this->findModelOrFail(User::class, $id);
 
         if ($request->filled('new_password')) {
             if (!Hash::check($request->current_password, $user->password)) {
@@ -77,9 +89,14 @@ class AuthController extends Controller
     }
 
     public function list_equiqment()
-{
-    $user = Auth::user();
-    $assets = $user->assets;
-    return view('profile.list_equiqment', compact('assets'));
-}
+    {
+        $user = Auth::user();
+        $assets = $user->assets;
+        
+        return view('profile.list_equiqment', compact('assets'));
+    }
+
+    public function update_device(Request $request,$id){
+         
+    }
 }

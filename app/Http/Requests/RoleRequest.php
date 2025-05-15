@@ -21,9 +21,16 @@ class RoleRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'role_name' => 'required|string|max:255|unique:roles,name',
+        $roleId = $this->id ?? null;
+        $rules = [
+            'role_name' => 'string|max:255|unique:roles,name' . ($roleId ? ',' . $roleId : ''),
             'permissions' => 'required|array',
         ];
+
+        if ($this->isMethod('post')) {
+            $rules['role_name'] = 'required|' . $rules['role_name'];
+        }
+
+        return $rules;
     }
 }
