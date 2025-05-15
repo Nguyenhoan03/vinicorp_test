@@ -14,28 +14,30 @@
     <div class="flex min-h-screen">
         @include('components.Sidebar_admin')
         <!-- Sửa form update device -->
+
         <div id="updateDeviceForm" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
             <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
                 <h2 class="text-xl font-semibold mb-4">Cập nhật thiết bị</h2>
-                <form action="" method="POST" id="editForm" onsubmit="return validateAddDeviceForm()">
+                <form action="{{route('profile.update_device')}}" method="POST" id="editForm">
                     @csrf
+                    @method('PUT')
                     <div class="mb-4">
                         <label for="edit_name" class="block mb-1 font-medium">Tên thiết bị</label>
-                        <input type="text" name="name" id="edit_name" class="w-full border border-gray-300 rounded px-3 py-2" disabled>
+                        <input type="text" name="name" id="edit_name" class="w-full border border-gray-300 rounded px-3 py-2" readonly>
                     </div>
                     <div class="mb-4">
                         <label for="edit_type" class="block mb-1 font-medium">Loại thiết bị</label>
-                        <input type="text" name="type" id="edit_type" class="w-full border border-gray-300 rounded px-3 py-2" disabled>
+                        <input type="text" name="type" id="edit_type" class="w-full border border-gray-300 rounded px-3 py-2" readonly>
                     </div>
                     <div class="mb-4">
                         <label for="edit_status" class="block mb-1 font-medium">Trạng thái</label>
                         <select name="status" id="edit_status" class="w-full border border-gray-300 rounded px-3 py-2">
-                            <option value="">Chọn trạng thái</option>
+                            <!-- <option value="">Chọn trạng thái</option> -->
                             <option value="available">available</option>
                             <option value="in_use">in_use</option>
                             <option value="broken">broken</option>
                         </select>
-                        <span id="statusError" class="text-red-500 text-sm hidden">Vui lòng chọn trạng thái.</span>
+                        <!-- <span id="statusError" class="text-red-500 text-sm hidden">Vui lòng chọn trạng thái.</span> -->
                     </div>
                     <div class="flex justify-end space-x-2">
                         <button type="button" onclick="toggleAddEquimentForm()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded">Huỷ</button>
@@ -45,8 +47,10 @@
             </div>
         </div>
         <!-- ...existing code... -->
-
+        
         <div class="flex-1 p-6">
+             @include('components.alert.alert', ['type' => 'success', 'title' => 'Thành công!'])
+             @include('components.alert.alert_fail', ['type' => 'error', 'title' => 'Thất bại!'])
             <div class="bg-white rounded shadow p-4">
                 <h2 class="text-lg font-semibold mb-4">Danh sách thiết bị được cấp</h2>
                 <div class="overflow-x-auto">
@@ -125,8 +129,7 @@
         document.getElementById('edit_status').value = status;
 
         // Set action cho form
-        document.getElementById('editForm').action = `/profile_update_device/${id}`;
-
+        document.getElementById('editForm').action = "{{route('profile.update_device')}}?id=" + id;
         // Hiện form
         document.getElementById('updateDeviceForm').classList.remove('hidden');
     }

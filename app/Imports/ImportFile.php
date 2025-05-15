@@ -20,10 +20,7 @@ class ImportFile implements ToModel, WithHeadingRow, WithValidation, WithStartRo
     protected $requiredHeadings = ['Name', 'Email', 'Password', 'Role_id', 'Thiết Bị (Trạng Thái)'];
     protected $headingChecked = false;
 
-    public function startRow(): int
-    {
-        return 2;
-    }
+        public function startRow(): int { return 2; }
 
     public function model(array $row)
     {
@@ -33,23 +30,33 @@ class ImportFile implements ToModel, WithHeadingRow, WithValidation, WithStartRo
         }
 
         try {
-            // Tạo hoặc cập nhật user
-            $user = User::updateOrCreate(
-                ['email' => $row['Email']],
-                [
+            // Tìm user theo email
+            $user = User::where('email', $row['Email'])->first();
+
+            // Nếu user đã tồn tại, giữ nguyên password nếu không nhập mới
+            if ($user) {
+                $password = !empty($row['Password']) ? Hash::make($row['Password']) : $user->password;
+                $user->update([
                     'name'     => $row['Name'],
+                    'password' => $password,
+                    'role_id'  => $row['Role_id'],
+                ]);
+            } else {
+                // Nếu user chưa tồn tại, password là bắt buộc
+                $user = User::create([
+                    'name'     => $row['Name'],
+                    'email'    => $row['Email'],
                     'password' => Hash::make($row['Password']),
                     'role_id'  => $row['Role_id'],
-                ]
-            );
+                ]);
+            }
 
-            // Nếu có dữ liệu thiết bị
+            // Xử lý thiết bị
             if (!empty($row['Thiết Bị (Trạng Thái)'])) {
                 $deviceList = explode(',', $row['Thiết Bị (Trạng Thái)']);
-                $assetIds = collect(); // ID của asset mới từ Excel
+                $assetIds = collect();
 
                 foreach ($deviceList as $item) {
-                    // Tách tên và trạng thái
                     if (preg_match('/^(.*?)\s*\((.*?)\)$/', trim($item), $matches)) {
                         $rawName = trim($matches[1]);
                         $status = strtolower(trim($matches[2]));
@@ -62,12 +69,10 @@ class ImportFile implements ToModel, WithHeadingRow, WithValidation, WithStartRo
                         throw new \Exception("Trạng thái '$status' của thiết bị '$rawName' không hợp lệ.");
                     }
 
-                    // Tách tên và type assets
                     $nameParts = explode('-', $rawName);
                     $name = trim($nameParts[0]);
                     $type = $nameParts[1] ?? 'default';
 
-                    // Tạo hoặc cập nhật thiết bị
                     $asset = Asset::updateOrCreate(
                         ['name' => $name, 'type' => $type],
                         ['status' => $status]
@@ -84,14 +89,10 @@ class ImportFile implements ToModel, WithHeadingRow, WithValidation, WithStartRo
                     }
                 }
 
-                // Lấy danh sách ID thiết bị hiện tại của user
                 $currentAssetIds = $user->assets()->pluck('assets.id');
-
-                // So sánh để tối ưu hóa
                 $toAttach = $assetIds->diff($currentAssetIds);
                 $toDetach = $currentAssetIds->diff($assetIds);
 
-                // Chỉ thao tác nếu có thay đổi
                 if ($toAttach->isNotEmpty()) {
                     $user->assets()->attach($toAttach->all());
                 }
@@ -122,7 +123,7 @@ class ImportFile implements ToModel, WithHeadingRow, WithValidation, WithStartRo
         return [
             '*.Name'     => ['required', 'string', 'max:255'],
             '*.Email'    => ['required', 'email'],
-            '*.Password' => ['required', 'string', 'min:2'],
+            '*.Password' => ['nullable', 'string', 'min:2'],
             '*.Role_id'  => ['required', 'integer', 'exists:roles,id'],
             '*.Thiết Bị (Trạng Thái)' => ['nullable', 'string', 'max:1000'],
         ];
@@ -133,7 +134,7 @@ class ImportFile implements ToModel, WithHeadingRow, WithValidation, WithStartRo
         return [
             '*.Name.required'     => 'Tên là bắt buộc.',
             '*.Email.email'       => 'Email không hợp lệ.',
-            '*.Password.required' => 'Mật khẩu là bắt buộc.',
+            '*.Password.min' => 'Mật khẩu phải nhiều hơn 2 ký tự.',
             '*.Role_id.exists'    => 'Vai trò không tồn tại.',
         ];
     }

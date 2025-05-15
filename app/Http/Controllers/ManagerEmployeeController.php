@@ -90,7 +90,6 @@ class ManagerEmployeeController extends Controller
             unlink(public_path('upload/images/' . $user->img));
         }
         $user->delete();
-
         return response()->json(['success' => true]);
     }
 

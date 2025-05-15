@@ -11,7 +11,7 @@ class EmployeeRequest extends FormRequest
         return true;
     }
 
-   public function rules(): array
+    public function rules(): array
     {
         $userId = $this->id ?? null;
         $rules = [
@@ -25,9 +25,8 @@ class EmployeeRequest extends FormRequest
 
         if ($this->isMethod('post')) {
             $rules['password'] = ['required', 'string', 'min:2'];
-            $rules['name'] = ['required','unique:users,name' . $rules['name']];
-            $rules['email'] = ['required' . $rules['email']];
-
+            array_unshift($rules['name'], 'required');
+            array_unshift($rules['email'], 'required');
         }
 
         return $rules;

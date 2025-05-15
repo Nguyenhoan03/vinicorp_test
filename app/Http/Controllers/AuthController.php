@@ -6,11 +6,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\ImageService;
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Traits\ModelFinder;
 use App\Mail\PasswordChangedMail;
+use App\Mail\DeviceStatusChangedMail;
+use App\Models\Asset;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use App\Http\Requests\UpdateDeviceRequest;
 
 class AuthController extends Controller
 {
@@ -92,11 +97,42 @@ class AuthController extends Controller
     {
         $user = Auth::user();
         $assets = $user->assets;
-        
+
         return view('profile.list_equiqment', compact('assets'));
     }
 
-    public function update_device(Request $request,$id){
-         
+
+    public function update_device(UpdateDeviceRequest $request)
+    {
+        try {
+            $user = $this->findModelOrFail(User::class, $request->id);
+            Asset::where('name', $request->name)->update([
+                'status' => $request->status,
+            ]);
+
+            // gửi mail cho admin khi employee thay đổi thiết bị 
+            $adminRoleId = Role::where('name', 'admin')->value('id');
+            $admin_emails = User::where('role_id', $adminRoleId)->pluck('email')->toArray();
+            Log::info($admin_emails);
+            if (!empty($admin_emails)) {
+                foreach ($admin_emails as $email) {
+                    try {
+                        Mail::to($email)->queue(
+                            (new DeviceStatusChangedMail($user, $request->name, $request->status))
+                                ->from('phehoan@gmail.com', 'Ban quản trị')
+                        );
+                    } catch (\Throwable $e) {
+                        Log::error("Không gửi được mail tới $email: " . $e->getMessage());
+                    }
+                }
+            }
+            Mail::to($user->email)->queue(
+                (new DeviceStatusChangedMail($user, $request->name, $request->status))->from('phehoan@gmail.com', 'Ban quản trị')
+            );
+            return back()->with('success', 'Cập nhật thiết bị thành công!');
+        } catch (\Throwable $throw) {
+            Log::error("Lỗi cập nhật thiết bị: " . $throw->getMessage());
+            return back()->with('error', 'Có lỗi xảy ra khi cập nhật thiết bị!');
+        }
     }
 }
