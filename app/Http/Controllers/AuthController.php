@@ -113,7 +113,6 @@ class AuthController extends Controller
             // gửi mail cho admin khi employee thay đổi thiết bị 
             $adminRoleId = Role::where('name', 'admin')->value('id');
             $admin_emails = User::where('role_id', $adminRoleId)->pluck('email')->toArray();
-            Log::info($admin_emails);
             if (!empty($admin_emails)) {
                 foreach ($admin_emails as $email) {
                     try {
@@ -134,5 +133,14 @@ class AuthController extends Controller
             Log::error("Lỗi cập nhật thiết bị: " . $throw->getMessage());
             return back()->with('error', 'Có lỗi xảy ra khi cập nhật thiết bị!');
         }
+    }
+
+
+    public function view_register(){
+        return view('register');
+    }
+
+    public function register(){
+        
     }
 }

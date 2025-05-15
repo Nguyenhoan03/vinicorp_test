@@ -11,6 +11,8 @@ use App\Http\Controllers\ManagerEmployeeController;
 Route::get('/', function () {
     return view('index');
 });
+Route::get('/register', [AuthController::class, 'view_register'])->name('view_register');
+Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::get('/login', [AuthController::class, 'view_login'])->name('view_login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);

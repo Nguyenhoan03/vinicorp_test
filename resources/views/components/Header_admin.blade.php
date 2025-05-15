@@ -1,5 +1,5 @@
 <header class="bg-white shadow p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">Quản lý nhân viên</h1>
+    <h1 class="text-xl font-bold"><a href="/"> Trang chủ </a></h1>
     <div class="flex items-center space-x-4">
         @auth
         <div class="relative group">
