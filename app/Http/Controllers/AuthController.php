@@ -16,7 +16,9 @@ use App\Models\Asset;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\UpdateDeviceRequest;
-use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
+use App\Mail\VerifyRegisterMail;
 
 
 
@@ -108,7 +110,7 @@ class AuthController extends Controller
     public function update_device(UpdateDeviceRequest $request)
     {
         try {
-            $user = $this->findModelOrFail(User::class, $request->id);
+            $user = Auth::user();
 
             // Cập nhật trạng thái thiết bị
             $asset = Asset::where('name', $request->name)->first();
@@ -160,18 +162,18 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:2|confirmed',
         ]);
-        // Tạo user
-        $user = User::create([
+
+        $token = Str::random(64);
+        // Lưu tạm thông tin đăng ký vào cache (hoặc session)
+        Cache::put("pending_user_{$token}", [
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
-            'role_id' => 2,
-        ]);
-        // Phát event Registered để Laravel biết user cần xác minh
-        event(new Registered($user));
-        // Đăng nhập user (nếu muốn redirect tới verify ngay)
-        Auth::login($user);
-        // Redirect tới trang yêu cầu xác minh
-        return redirect()->route('verification.notice')->with('success', 'Vui lòng kiểm tra email để xác minh tài khoản!');
+        ], now()->addMinutes(60)); // Hết hạn sau 60 phút
+
+        // Gửi email xác minh
+        Mail::to($request->email)->send(new VerifyRegisterMail($token));
+
+         return redirect('/login')->with('info', 'Đã gửi email xác minh. Vui lòng kiểm tra và xác thực để hoàn tất đăng ký.');
     }
 }

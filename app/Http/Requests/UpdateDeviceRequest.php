@@ -22,7 +22,7 @@ class UpdateDeviceRequest extends FormRequest
    public function rules(): array
     {
         return [
-            'id'     => 'required|exists:users,id',
+            'id'     => 'required|exists:assets,id',
             'name'   => 'required|string|exists:assets,name',
             'status' => 'required|in:available,in_use,broken',
         ];

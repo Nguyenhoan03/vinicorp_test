@@ -13,6 +13,8 @@
 <body>
   <div class="login-box">
     @include('components.alert.alert', ['type' => 'success', 'title' => 'Đăng ký Thành công!'])
+    @include('components.alert.alert', ['type' => 'info', 'title' => 'Thông báo!'])
+    @include('components.alert.alert_fail', ['type' => 'error', 'title' => 'Thất bại!'])
 
     <h2>Đăng nhập hệ thống</h2>
     @include('components.alert.alert_validate')
@@ -32,7 +34,7 @@
         <a href="{{route('view_register')}}">Đăng ký</a>
       </div>
       <div class="text-end mt-2">
-        <a href="/forgot.html">Quên mật khẩu?</a>
+        <a href="{{route('password.request')}}">Quên mật khẩu?</a>
       </div>
     </form>
     <div class="login-footer mt-4">

@@ -21,6 +21,7 @@
                 <form action="{{route('profile.update_device')}}" method="POST" id="editForm">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="id" id="edit_id">
                     <div class="mb-4">
                         <label for="edit_name" class="block mb-1 font-medium">Tên thiết bị</label>
                         <input type="text" name="name" id="edit_name" class="w-full border border-gray-300 rounded px-3 py-2" readonly>
@@ -47,10 +48,10 @@
             </div>
         </div>
         <!-- ...existing code... -->
-        
+
         <div class="flex-1 p-6">
-             @include('components.alert.alert', ['type' => 'success', 'title' => 'Thành công!'])
-             @include('components.alert.alert_fail', ['type' => 'error', 'title' => 'Thất bại!'])
+            @include('components.alert.alert', ['type' => 'success', 'title' => 'Thành công!'])
+            @include('components.alert.alert_fail', ['type' => 'error', 'title' => 'Thất bại!'])
             <div class="bg-white rounded shadow p-4">
                 <h2 class="text-lg font-semibold mb-4">Danh sách thiết bị được cấp</h2>
                 <div class="overflow-x-auto">
@@ -117,22 +118,21 @@
 </body>
 <script>
     function showUpdateForm(button) {
-        // Lấy dữ liệu từ button
         const id = button.getAttribute('data-id');
         const name = button.getAttribute('data-name');
         const type = button.getAttribute('data-type');
         const status = button.getAttribute('data-status');
 
-        // Đổ dữ liệu vào form
+        document.getElementById('edit_id').value = id;
         document.getElementById('edit_name').value = name;
         document.getElementById('edit_type').value = type;
         document.getElementById('edit_status').value = status;
 
-        // Set action cho form
-        document.getElementById('editForm').action = "{{route('profile.update_device')}}?id=" + id;
-        // Hiện form
+        document.getElementById('editForm').action = "{{ route('profile.update_device') }}";
+        
         document.getElementById('updateDeviceForm').classList.remove('hidden');
     }
+
 
     // Hàm ẩn form
     function toggleAddEquimentForm() {

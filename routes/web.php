@@ -9,6 +9,10 @@ use App\Http\Middleware\VerifyAccountLogin;
 use App\Http\Controllers\ManagerEmployeeController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+use Illuminate\Support\Facades\Cache;
+use App\Models\User;
 
 Route::get('/', function () {
     return view('index');
@@ -29,6 +33,39 @@ Route::post('/email/verification-notification', function (Request $request) {
     return back()->with('message', 'Đã gửi lại email xác thực!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
+Route::get('/register/verify/{token}', function ($token) {
+    $data = Cache::get("pending_user_{$token}");
+
+    if (!$data) {
+        return redirect('/login')->with('error', 'Liên kết không hợp lệ hoặc đã hết hạn.');
+    }
+
+    // Tạo tài khoản thật
+    User::create([
+        'name' => $data['name'],
+        'email' => $data['email'],
+        'password' => $data['password'],
+        'role_id' => 2,
+        'email_verified_at' => now(),
+    ]);
+
+    Cache::forget("pending_user_{$token}");
+
+    return redirect('/login')->with('success', 'Xác minh thành công! Tài khoản đã được tạo.');
+})->name('register.verify');
+
+
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+
+// Gửi email reset
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+
+// Hiển thị form đặt lại mật khẩu
+Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+
+// Đặt lại mật khẩu
+Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
+
 
 Route::get('/register', [AuthController::class, 'view_register'])->name('view_register');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
@@ -36,7 +73,7 @@ Route::get('/login', [AuthController::class, 'view_login'])->name('view_login');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout']);
 
-Route::group(['middleware' => /* ['auth', 'verified' , */ VerifyAccountLogin::class], function () {
+Route::group(['middleware' => VerifyAccountLogin::class], function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
@@ -67,5 +104,6 @@ Route::group(['middleware' => /* ['auth', 'verified' , */ VerifyAccountLogin::cl
     Route::put('/profile_update/{id}', [AuthController::class, 'update'])->name('profile.update');
 
     Route::get('/profile_list_equiqment', [AuthController::class, 'list_equiqment'])->name('profile.list_equiqment');
-    Route::put('/profile_update_devce', [AuthController::class, 'update_device'])->name('profile.update_device');
+    Route::put('/profile_update_device', [AuthController::class, 'update_device'])->name('profile.update_device');
+    
 });
